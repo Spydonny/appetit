@@ -1,0 +1,22 @@
+{
+  "signup": "Регистрация",
+  "step": "Шаг {current} из {total}",
+  "firstname": "Имя",
+  "lastname": "Фамилия",
+  "birthday": "День рождения",
+  "address": "Адрес",
+  "phone": "Телефон",
+  "password": "Пароль",
+  "confirm_password": "Повторите пароль",
+  "already_have_account": "У вас уже есть аккаунт?",
+  "next": "Далее",
+  "back": "Назад",
+  "confirm_phone": "Подтверждение телефона",
+  "enter_sms_code": "Введите код из SMS",
+  "recheck_number": "Перепроверить номер",
+  "confirm": "Подтвердить",
+  "login": "Вход",
+  "register": "Зарегистрироваться",
+  "passwords_do_not_match": "Пароли не совпадают",
+  "change_language": "Сменить язык"
+}

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../../widgets/widgets.dart';
 import '../widgets/widgets.dart';
 
@@ -10,6 +9,7 @@ class PhoneAccPage extends StatefulWidget {
   final String birthday;
   final String address;
   final String password;
+  final VoidCallback onResend; // колбэк для пересылки кода
 
   const PhoneAccPage({
     super.key,
@@ -19,6 +19,7 @@ class PhoneAccPage extends StatefulWidget {
     required this.birthday,
     required this.address,
     required this.password,
+    required this.onResend,
   });
 
   @override
@@ -39,17 +40,20 @@ class _PhoneAccPageState extends State<PhoneAccPage> {
   }
 
   @override
+  void dispose() {
+    codeCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 350,
-            minWidth: 280,
-          ),
-          child: DefaultContainer(
+        child: DefaultContainer(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 350),
             child: Column(
-              mainAxisSize: MainAxisSize.min, // 👈 это главное
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
@@ -62,8 +66,29 @@ class _PhoneAccPageState extends State<PhoneAccPage> {
                   hintText: "Введите код из SMS",
                   keyboardType: TextInputType.number,
                 ),
+
+                const SizedBox(height: 12),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () =>
+                        Navigator.pop(context),
+                    child: Text(
+                      "Перепроверить номер",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 16),
+
                 AuthButton(
+                  width: 120,
                   onPressed: _verify,
                   child: const Text("Подтвердить"),
                 ),
@@ -75,3 +100,4 @@ class _PhoneAccPageState extends State<PhoneAccPage> {
     );
   }
 }
+

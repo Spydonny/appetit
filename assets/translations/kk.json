@@ -1,0 +1,22 @@
+{
+  "signup": "Тіркелу",
+  "step": "Қадам {current} / {total}",
+  "firstname": "Атыңыз",
+  "lastname": "Тегіңіз",
+  "birthday": "Туған күн",
+  "address": "Мекенжай",
+  "phone": "Телефон",
+  "password": "Құпиясөз",
+  "confirm_password": "Құпиясөзді қайталаңыз",
+  "already_have_account": "Аккаунтыңыз бар ма?",
+  "next": "Әрі қарай",
+  "back": "Артқа",
+  "confirm_phone": "Телефонды растау",
+  "enter_sms_code": "SMS кодын енгізіңіз",
+  "recheck_number": "Нөмірді қайта тексеру",
+  "confirm": "Растау",
+  "login": "Кіру",
+  "register": "Тіркелу",
+  "passwords_do_not_match": "Құпиясөздер сәйкес келмейді",
+  "change_language": "Тілді ауыстыру"
+}

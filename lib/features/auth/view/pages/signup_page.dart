@@ -1,4 +1,3 @@
-import 'package:appetite_app/features/auth/view/pages/login_page.dart';
 import 'package:appetite_app/features/auth/view/pages/pages.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
@@ -85,6 +84,9 @@ class _SignupPageState extends State<SignupPage> {
           birthday: birthdayCtrl.text,
           address: addressCtrl.text,
           password: passwordCtrl.text,
+          onResend: () {
+            ///TODO: add resend
+          },
         ),
       ),
     );
@@ -230,6 +232,7 @@ class _SignupPageState extends State<SignupPage> {
                       )
                     else
                       AuthButton(
+                        width: 175,
                         onPressed: _submit,
                         child: const Text("Подтвердить номер"),
                       ),

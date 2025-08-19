@@ -5,21 +5,23 @@ class AuthButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     required this.child,
+    this.width = 100
   });
 
   final VoidCallback onPressed;
   final Widget child;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return SizedBox(
-      width: 100,
+      width: width,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 15),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
           textStyle: theme.textTheme.labelLarge?.copyWith(

@@ -1,3 +1,4 @@
+import 'package:appetite_app/features/auth/view/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../core/theme/app_icons.dart';
@@ -22,20 +23,23 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
+  void dispose() {
+    phoneCtrl.dispose();
+    passwordCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 350,
-            minWidth: 280,
-          ),
-          child: DefaultContainer(
-            padding: const EdgeInsets.all(20),
+        child: DefaultContainer(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 350),
             child: Column(
-              mainAxisSize: MainAxisSize.min, // 👈 только по содержимому
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Image(image: logoAppetite, height: 50 ,),
+                Image(image: logoAppetite, height: 50),
                 const SizedBox(height: 16),
                 const Text(
                   "Вход",
@@ -62,12 +66,20 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: Navigator.of(context).pop,
-                      child: Text('Зарегистрироваться',
-                        style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                      onTap: () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SignupPage(),
+                        ),
+                      ),
+                      child: Text(
+                        'Зарегистрироваться',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
-                    SizedBox()
+                    const SizedBox(),
                   ],
                 ),
                 const SizedBox(height: 20),
