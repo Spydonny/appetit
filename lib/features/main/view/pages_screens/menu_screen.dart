@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:story_view/story_view.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/theme/app_icons.dart';
 import '../widgets/widgets.dart';
@@ -52,9 +53,9 @@ class _MenuScreenState extends State<MenuScreen> {
 
   // 🔹 Заглушка для акций
   final List<Map<String, String>> promoStories = [
-    {"title": "Акция 1", "image": "https://picsum.photos/200/300?random=1"},
-    {"title": "Акция 2", "image": "https://picsum.photos/200/300?random=2"},
-    {"title": "Акция 3", "image": "https://picsum.photos/200/300?random=3"},
+    {"title": "promo1", "image": "https://picsum.photos/200/300?random=1"},
+    {"title": "promo2", "image": "https://picsum.photos/200/300?random=2"},
+    {"title": "promo3", "image": "https://picsum.photos/200/300?random=3"},
   ];
 
   void _openStories(int index) {
@@ -70,23 +71,20 @@ class _MenuScreenState extends State<MenuScreen> {
               StoryItem.pageImage(
                 url: "https://picsum.photos/1080/1920?1",
                 controller: controller,
-                caption: const Text("Акция: скидка 20%"),
+                caption: Text(tr("promo_discount")),
               ),
               StoryItem.pageImage(
                 url: "https://picsum.photos/1080/1920?2",
                 controller: controller,
-                caption: const Text("🔥 Только сегодня!"),
+                caption: Text(tr("promo_today")),
               ),
               StoryItem.pageVideo(
                 "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
                 controller: controller,
-                caption: const Text("Видео-акция"),
+                caption: Text(tr("promo_video")),
               ),
             ],
-            onStoryShow: (s, i) {},
-            onComplete: () {
-              Navigator.pop(context);
-            },
+            onComplete: () => Navigator.pop(context),
             repeat: false,
           ),
         ),
@@ -126,7 +124,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      promo["title"]!,
+                      tr(promo["title"]!), // ✅ локализация
                       style: const TextStyle(fontSize: 12, color: Colors.white),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -155,7 +153,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   ),
                   elevation: 0,
                 ),
-                child: Text(cat, style: const TextStyle(fontSize: 14)),
+                child: Text(tr(cat), style: const TextStyle(fontSize: 14)),
               );
             }).toList(),
           ),
@@ -168,22 +166,22 @@ class _MenuScreenState extends State<MenuScreen> {
             children: [
               _buildSection(
                 keyAnchor: _sectionKeys['dishes']!,
-                title: 'Dishes',
+                title: tr('dishes'),
                 items: List.generate(5, (i) => 'Burger $i'),
               ),
               _buildSection(
                 keyAnchor: _sectionKeys['snacks']!,
-                title: 'Snacks',
+                title: tr('snacks'),
                 items: List.generate(3, (i) => 'Fries $i'),
               ),
               _buildSection(
                 keyAnchor: _sectionKeys['sauces']!,
-                title: 'Sauces',
+                title: tr('sauces'),
                 items: List.generate(2, (i) => 'Sauce $i'),
               ),
               _buildSection(
                 keyAnchor: _sectionKeys['drinks']!,
-                title: 'Drinks',
+                title: tr('drinks'),
                 items: List.generate(4, (i) => 'Cola $i'),
               ),
             ],
@@ -212,7 +210,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 name: name,
                 price: 1200,
                 assetImage: AppIcons.logoAppetite,
-                description: 'Описание $name',
+                description: '${tr("description")} $name',
                 onTap: () {
                   showModalBottomSheet(
                     context: context,
@@ -225,14 +223,14 @@ class _MenuScreenState extends State<MenuScreen> {
                             image: AppIcons.logoAppetite,
                             name: name,
                             price: 1200,
-                            description: 'Полное описание $name. Очень вкусно!',
+                            description: '${tr("full_description")} $name',
                             additions: [
-                              {"Cheese": 200},
-                              {"Bacon": 300},
+                              {tr("cheese"): 200},
+                              {tr("bacon"): 300},
                             ],
                             reductions: [
-                              {"No Onion": 0},
-                              {"No Sauce": 0},
+                              {tr("no_onion"): 0},
+                              {tr("no_sauce"): 0},
                             ],
                           ),
                         ),

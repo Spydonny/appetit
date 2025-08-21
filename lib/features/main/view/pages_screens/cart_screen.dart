@@ -1,7 +1,7 @@
 import 'package:appetite_app/widgets/drop_down_buttons/drop_down_buttons.dart';
 import 'package:appetite_app/widgets/switches/inset_switch.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_combo_box/flutter_combo_box.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../widgets/widgets.dart';
 
 class CartScreen extends StatefulWidget {
@@ -40,13 +40,6 @@ class _CartScreenState extends State<CartScreen> {
     },
   ];
 
-  late Future<List<dynamic>> datas;
-
-  Future<List<String>> _loadGenders() async {
-    await Future.delayed(Duration(seconds: 1)); // имитация загрузки
-    return ['Оплата Kaspi.kz', 'Оплата наличными'];
-  }
-
   final List<String> pickupAddresses = [
     "ул. Абая 10",
     "пр. Назарбаева 50",
@@ -58,19 +51,17 @@ class _CartScreenState extends State<CartScreen> {
   void _choosePickupAddress() async {
     final result = await showDialog<String>(
       context: context,
-      builder: (context) =>
-          SimpleDialog(
-            title: const Text("Выберите адрес самовывоза"),
-            children: pickupAddresses
-                .map(
-                  (addr) =>
-                  SimpleDialogOption(
-                    onPressed: () => Navigator.pop(context, addr),
-                    child: Text(addr),
-                  ),
-            )
-                .toList(),
+      builder: (context) => SimpleDialog(
+        title: Text(tr("choose_pickup_address")),
+        children: pickupAddresses
+            .map(
+              (addr) => SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, addr),
+            child: Text(addr),
           ),
+        )
+            .toList(),
+      ),
     );
     if (result != null) {
       setState(() => selectedPickupAddress = result);
@@ -82,17 +73,11 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   @override
-  void initState() {
-    datas = _loadGenders();
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final productsTotal =
-    cartItems.fold<int>(0, (sum, item) => sum + item["price"] as int);
+    final productsTotal = cartItems.fold<int>(
+        0, (sum, item) => sum + (item["price"] as int) * (item["quantity"] as int));
     final deliveryPrice = !isDelivery ? 0 : 500;
     final bonusValue = useBonuses ? 300 : 0;
     final total = productsTotal + deliveryPrice - bonusValue;
@@ -107,16 +92,14 @@ class _CartScreenState extends State<CartScreen> {
               children: [
                 // --- Способ получения ---
                 SectionContainer(
-                  title: "Способ получения",
+                  title: tr("receiving_method"),
                   child: Column(
                     children: [
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       _buildDeliverySwitch(),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       InkWell(
-
-                        onTap: () =>
-                        !isDelivery ? _choosePickupAddress() : null,
+                        onTap: () => !isDelivery ? _choosePickupAddress() : null,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Row(
@@ -127,7 +110,7 @@ class _CartScreenState extends State<CartScreen> {
                                 child: Text(
                                   !isDelivery
                                       ? (selectedPickupAddress ??
-                                      "Выберите адрес самовывоза")
+                                      tr("choose_pickup_address"))
                                       : deliveryAddress,
                                   style: theme.textTheme.bodyMedium,
                                 ),
@@ -143,7 +126,7 @@ class _CartScreenState extends State<CartScreen> {
 
                 // --- Ваш заказ ---
                 SectionContainer(
-                  title: "Ваш заказ",
+                  title: tr("cart"),
                   child: Column(
                     children: cartItems.asMap().entries.map((entry) {
                       final i = entry.key;
@@ -190,7 +173,9 @@ class _CartScreenState extends State<CartScreen> {
                                     icon: const Icon(Icons.remove_circle_outline),
                                     onPressed: () {
                                       setState(() {
-                                        if (item["quantity"] > 1) item["quantity"]--;
+                                        if (item["quantity"] > 1) {
+                                          item["quantity"]--;
+                                        }
                                       });
                                     },
                                   ),
@@ -241,23 +226,24 @@ class _CartScreenState extends State<CartScreen> {
 
                 // --- Скидки ---
                 SectionContainer(
-                  title: "Скидки",
+                  title: tr("discounts"),
                   child: Column(
                     children: [
                       const SizedBox(height: 12),
                       InsetTextField(
                         controller: promoController,
-                        hintText: "Промокод",
+                        hintText: tr("promo"),
                       ),
                       const SizedBox(height: 12),
                       Row(
-                        mainAxisSize: MainAxisSize.max,
                         children: [
-                          Expanded(child: InsetSwitch(
-                            value: useBonuses,
-                            onChanged: (v) =>
-                                setState(() => useBonuses = v), label: 'Использовать бонусы',
-                          ),)
+                          Expanded(
+                            child: InsetSwitch(
+                              value: useBonuses,
+                              onChanged: (v) => setState(() => useBonuses = v),
+                              label: tr("use_bonus"),
+                            ),
+                          )
                         ],
                       ),
                     ],
@@ -267,58 +253,56 @@ class _CartScreenState extends State<CartScreen> {
 
                 // --- Способ оплаты ---
                 SectionContainer(
-                  title: 'Способ оплаты',
+                  title: tr("payment_method"),
                   child: InsetDropdown<String>(
-                    hintText: "Выберите способ оплаты",
-                    value: payment, // текущее выбранное значение
-                    items: const [
+                    hintText: tr("select_payment"),
+                    value: payment,
+                    items: [
                       DropdownMenuItem(
                         value: "Kaspi",
-                        child: Text("Оплата Kaspi.kz"),
+                        child: Text(tr("pay_kaspi")),
                       ),
                       DropdownMenuItem(
                         value: "Cash",
-                        child: Text("Оплата наличными"),
+                        child: Text(tr("pay_cash")),
                       ),
                     ],
                     onChanged: (value) {
                       setState(() {
                         payment = value;
                       });
-                      debugPrint("Выбрано: $value");
                     },
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // --- Коментарий ---
+                // --- Комментарии ---
                 SectionContainer(
-                    title: 'Коментарии к заказу',
-                    child: Padding(padding: EdgeInsets.symmetric(vertical: 8),
-                      child: InsetTextField(
-                        hintText: 'Коментарии',
-                        minLines: 1,
-                        maxLines: 3,
-                      ),
-                    )
+                  title: tr("comment_order"),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: InsetTextField(
+                      hintText: tr("comment"),
+                      minLines: 1,
+                      maxLines: 3,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
 
                 // --- Детали заказа ---
                 SectionContainer(
-                  title: "Детали заказа",
+                  title: tr("order_details"),
                   child: Column(
                     children: [
-                      _priceRow("Товары", "$productsTotal ₸"),
-                      _priceRow("Доставка", "$deliveryPrice ₸"),
+                      _priceRow(tr("products"), "$productsTotal ₸"),
+                      _priceRow(tr("delivery"), "$deliveryPrice ₸"),
                       _priceRow(
-                        useBonuses
-                            ? "Использовано бонусов"
-                            : "Начислится бонусов",
+                        useBonuses ? tr("use_bonus") : tr("bonuses"),
                         "$bonusValue ₸",
                       ),
                       const Divider(),
-                      _priceRow("Итого", "$total ₸", isTotal: true),
+                      _priceRow(tr("total"), "$total ₸", isTotal: true),
                     ],
                   ),
                 ),
@@ -337,7 +321,7 @@ class _CartScreenState extends State<CartScreen> {
               colorOnPrimary: theme.colorScheme.onPrimary,
               onPressed: () {},
               child: Text(
-                'Заказать',
+                tr("order"),
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: theme.colorScheme.onPrimary,
                 ),
@@ -379,7 +363,7 @@ class _CartScreenState extends State<CartScreen> {
       children: [
         Expanded(
           child: DeliveryChoiceChip(
-            label: "Самовывоз",
+            label: tr("pickup"),
             selected: !isDelivery,
             onSelected: () => setState(() => isDelivery = false),
           ),
@@ -387,7 +371,7 @@ class _CartScreenState extends State<CartScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: DeliveryChoiceChip(
-            label: "Доставка",
+            label: tr("delivery"),
             selected: isDelivery,
             onSelected: () => setState(() => isDelivery = true),
           ),
@@ -395,8 +379,8 @@ class _CartScreenState extends State<CartScreen> {
       ],
     );
   }
-
 }
+
 
 class DeliveryChoiceChip extends StatelessWidget {
   final bool selected;

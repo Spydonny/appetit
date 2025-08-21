@@ -2,6 +2,7 @@ import 'package:appetite_app/features/main/view/pages_screens/cart_screen.dart';
 import 'package:appetite_app/features/main/view/pages_screens/menu_screen.dart';
 import 'package:appetite_app/features/main/view/pages_screens/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -13,7 +14,11 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int currentPageIndex = 0;
 
-  final List<Widget> screens = [MenuScreen(), ProfileScreen(), CartScreen()];
+  final List<Widget> screens = [
+    const MenuScreen(),
+    const ProfileScreen(),
+    const CartScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -23,18 +28,21 @@ class _MainPageState extends State<MainPage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.red),
-              child: Text('Меню', style: TextStyle(color: Colors.white, fontSize: 24)),
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.red),
+              child: Text(
+                tr("menu"),
+                style: const TextStyle(color: Colors.white, fontSize: 24),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.home),
-              title: const Text('Главная'),
+              title: Text(tr("home")), // 🔑
               onTap: () {},
             ),
             ListTile(
               leading: const Icon(Icons.settings),
-              title: const Text('Настройки'),
+              title: Text(tr("settings")), // 🔑
               onTap: () {},
             ),
           ],
@@ -54,10 +62,19 @@ class _MainPageState extends State<MainPage> {
             currentPageIndex = index;
           });
         },
-        destinations: const <Widget>[
-          NavigationDestination(icon: Icon(Icons.list_alt), label: 'Меню'),
-          NavigationDestination(icon: Icon(Icons.account_box), label: 'Профиль'),
-          NavigationDestination(icon: Icon(Icons.shopping_basket), label: 'Корзина',),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.list_alt),
+            label: tr("menu"), // 🔑
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.account_box),
+            label: tr("profile"), // 🔑
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.shopping_basket),
+            label: tr("cart"), // 🔑
+          ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:appetite_app/widgets/switches/inset_switch.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
 
@@ -72,31 +73,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
           InsetTextField(
             controller: _firstNameController,
             enabled: false,
-            hintText: "Имя",
+            hintText: tr("first_name"), // 🔑
           ),
           const SizedBox(height: 16),
           InsetTextField(
             controller: _lastNameController,
             enabled: false,
-            hintText: "Фамилия",
+            hintText: tr("last_name"), // 🔑
           ),
           const SizedBox(height: 16),
           InsetTextField(
             controller: _phoneController,
             enabled: false,
-            hintText: "Телефон",
+            hintText: tr("phone"), // 🔑
           ),
           const SizedBox(height: 16),
           InsetTextField(
             controller: _addressController,
             enabled: false,
-            hintText: "Адрес",
+            hintText: tr("address"), // 🔑
           ),
           const SizedBox(height: 16),
           InsetTextField(
             controller: _birthDateController,
             enabled: false,
-            hintText: "День рождения",
+            hintText: tr("birth_date"), // 🔑
           ),
 
           const Padding(
@@ -108,16 +109,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             children: [
               Expanded(
-                  child: InsetSwitch(
-                      label: 'Смена языка  ${isKazakh ? '🇰🇿' : '🇷🇺'}',
-                      value: isKazakh,
-                      onChanged: (value) {
-                        setState(() {
-                          isKazakh = value;
-                        });
-                      }
-                  )),
-
+                child: InsetSwitch(
+                  label: '${tr("change_language")}  ${isKazakh ? '🇰🇿' : '🇷🇺'}',
+                  value: isKazakh,
+                  onChanged: (value) {
+                    setState(() {
+                      isKazakh = value;
+                    });
+                    context.setLocale(Locale(isKazakh ? 'kk' : 'ru'));
+                  },
+                ),
+              ),
             ],
           ),
 
@@ -127,9 +129,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
 
           // История заказов
-          const Text(
-            "История заказов",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            tr("order_history"), // 🔑
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
 
@@ -144,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: DefaultContainer(
                   child: ListTile(
                     title: Text(order["title"]),
-                    subtitle: Text("Дата: ${order["date"]}"),
+                    subtitle: Text("${tr("date")}: ${order["date"]}"), // 🔑
                     trailing: Text("${order["price"]} ₸"),
                   ),
                 ),
