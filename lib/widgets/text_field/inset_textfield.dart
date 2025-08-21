@@ -5,6 +5,10 @@ class InsetTextField extends StatefulWidget {
   final TextEditingController? controller;
   final bool obscureText;
   final TextInputType keyboardType;
+  final bool? enabled;
+  final int? minLines;
+  final int? maxLines;
+  final ValueChanged<String>? onSubmitted; // ✅ новый колбэк
 
   const InsetTextField({
     super.key,
@@ -12,6 +16,10 @@ class InsetTextField extends StatefulWidget {
     this.controller,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
+    this.enabled,
+    this.minLines,
+    this.maxLines,
+    this.onSubmitted,
   });
 
   @override
@@ -29,7 +37,7 @@ class _InsetTextFieldState extends State<InsetTextField> {
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFF2C2C2C); // тёмный фон
+    const backgroundColor = Color(0xFF2C2C2C);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -37,25 +45,36 @@ class _InsetTextFieldState extends State<InsetTextField> {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: const [
-          // Светлая тень сверху-слева
           BoxShadow(
             offset: Offset(-3, -3),
             blurRadius: 6,
-            color: Color(0xFF3A3A3A), // чуть светлее фона
+            color: Color(0xFF3A3A3A),
           ),
-          // Тёмная тень снизу-справа
           BoxShadow(
             offset: Offset(3, 3),
             blurRadius: 6,
-            color: Color(0xFF1A1A1A), // почти чёрный
+            color: Color(0xFF1A1A1A),
           ),
         ],
       ),
       child: TextField(
         controller: widget.controller,
         obscureText: _obscure,
-        keyboardType: widget.keyboardType,
-        style: const TextStyle(color: Colors.white), // текст белым
+        enabled: widget.enabled,
+        minLines: widget.obscureText ? 1 : widget.minLines,
+        maxLines: widget.obscureText ? 1 : widget.maxLines,
+        keyboardType: (widget.maxLines == null || (widget.maxLines ?? 1) > 1)
+            ? TextInputType.multiline   // ✅ многострочный
+            : widget.keyboardType,      // ✅ дефолтный
+        textInputAction: (widget.maxLines == null || (widget.maxLines ?? 1) > 1)
+            ? TextInputAction.newline   // ✅ Enter = перенос строки
+            : TextInputAction.done,     // ✅ Enter = submit
+        onSubmitted: (value) {
+          if ((widget.maxLines ?? 1) == 1 && widget.onSubmitted != null) {
+            widget.onSubmitted!(value);
+          }
+        },
+        style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: widget.hintText,
@@ -74,7 +93,8 @@ class _InsetTextFieldState extends State<InsetTextField> {
           )
               : null,
         ),
-      ),
+      )
+      ,
     );
   }
 }

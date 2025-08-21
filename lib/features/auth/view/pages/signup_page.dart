@@ -1,8 +1,9 @@
 import 'package:appetite_app/features/auth/view/pages/pages.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../core/theme/app_icons.dart';
-import '../widgets/auth_button.dart';
+import '../widgets/widgets.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -12,25 +13,24 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  final AssetImage logoAppetite = AppIcons.logoAppetite;
+  final logoAppetite = AppIcons.logoAppetite;
 
-  // Контроллеры
-  final TextEditingController firstnameCtrl = TextEditingController();
-  final TextEditingController lastnameCtrl = TextEditingController();
-  final TextEditingController birthdayCtrl = TextEditingController();
-  final TextEditingController addressCtrl = TextEditingController();
-  final TextEditingController phoneCtrl = TextEditingController();
-  final TextEditingController passwordCtrl = TextEditingController();
-  final TextEditingController confirmPasswordCtrl = TextEditingController();
-
-  final PageController _pageController = PageController();
+  final _pageController = PageController();
   int _currentPage = 0;
+
+  final firstnameCtrl = TextEditingController();
+  final lastnameCtrl = TextEditingController();
+  final birthdayCtrl = TextEditingController();
+  final addressCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
+  final passwordCtrl = TextEditingController();
+  final confirmPasswordCtrl = TextEditingController();
 
   void _nextPage() {
     if (_currentPage < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        curve: Curves.ease,
       );
     }
   }
@@ -39,41 +39,18 @@ class _SignupPageState extends State<SignupPage> {
     if (_currentPage > 0) {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        curve: Curves.ease,
       );
     }
   }
 
-  Future<void> _pickBirthday() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000, 1, 1),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        birthdayCtrl.text = "${picked.day}.${picked.month}.${picked.year}";
-      });
-    }
-  }
   void _submit() {
-    // Здесь обработка регистрации
-    debugPrint("Имя: ${firstnameCtrl.text}");
-    debugPrint("Фамилия: ${lastnameCtrl.text}");
-    debugPrint("Дата рождения: ${birthdayCtrl.text}");
-    debugPrint("Адрес: ${addressCtrl.text}");
-    debugPrint("Телефон: ${phoneCtrl.text}");
-    debugPrint("Пароль: ${passwordCtrl.text}");
-    debugPrint("Повтор пароля: ${confirmPasswordCtrl.text}");
-
     if (passwordCtrl.text != confirmPasswordCtrl.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Пароли не совпадают")),
+        SnackBar(content: Text("passwords_do_not_match".tr())),
       );
       return;
     }
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -85,112 +62,80 @@ class _SignupPageState extends State<SignupPage> {
           address: addressCtrl.text,
           password: passwordCtrl.text,
           onResend: () {
-            ///TODO: add resend
+            // TODO: resend logic
           },
         ),
       ),
     );
   }
 
+  Future<void> _pickBirthday() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 18),
+      firstDate: DateTime(1900),
+      lastDate: now,
+    );
+    if (picked != null) {
+      birthdayCtrl.text = DateFormat('dd.MM.yyyy').format(picked);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(),
+            ChangeLanguageRow()
+          ],
+        ),
+      ),
       body: Center(
         child: DefaultContainer(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 350, // ограничиваем ширину контейнера
-            ),
+            constraints: const BoxConstraints(maxWidth: 350),
             child: Column(
-              mainAxisSize: MainAxisSize.min, // минимальная высота
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Image(image: logoAppetite, height: 50 ,),
+                Image(image: logoAppetite, height: 50),
                 const SizedBox(height: 16),
 
+                Text("signup".tr(),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+
                 Text(
-                  'Регистрация',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                // Индикатор шагов
-                Text(
-                  "Шаг ${_currentPage + 1} из 3",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+                  "step".tr(namedArgs: {
+                    "current": "${_currentPage + 1}",
+                    "total": "3"
+                  }),
                 ),
                 const SizedBox(height: 12),
 
-                // PageView для шагов
                 SizedBox(
-                  height: 200, // фиксированная высота под поля
+                  height: 200,
                   child: PageView(
                     controller: _pageController,
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
+                      setState(() => _currentPage = index);
                     },
                     children: [
-                      // Шаг 1 - Личные данные
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          InsetTextField(
-                            controller: firstnameCtrl,
-                            hintText: "Имя",
-                          ),
-                          const SizedBox(height: 8),
-                          InsetTextField(
-                            controller: lastnameCtrl,
-                            hintText: "Фамилия",
-                          ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: _pickBirthday,
-                            child: AbsorbPointer(
-                              child: InsetTextField(
-                                controller: birthdayCtrl,
-                                hintText: "День рождения",
-                              ),
-                            ),
-                          ),
-                        ],
+                      _StepOne(
+                        firstnameCtrl: firstnameCtrl,
+                        lastnameCtrl: lastnameCtrl,
+                        birthdayCtrl: birthdayCtrl,
+                        pickBirthday: _pickBirthday,
                       ),
-
-                      // Шаг 2 - Контакты
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          InsetTextField(
-                            controller: addressCtrl,
-                            hintText: "Адрес",
-                          ),
-                        ],
-                      ),
-
-                      // Шаг 3 - Безопасность
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          InsetTextField(
-                            controller: phoneCtrl,
-                            hintText: "Телефон",
-                            keyboardType: TextInputType.phone,
-                          ),
-                          const SizedBox(height: 8),
-                          InsetTextField(
-                            controller: passwordCtrl,
-                            hintText: "Пароль",
-                            obscureText: true,
-                          ),
-                          const SizedBox(height: 8),
-                          InsetTextField(
-                            controller: confirmPasswordCtrl,
-                            hintText: "Повторите пароль",
-                            obscureText: true,
-                          ),
-                        ],
+                      _StepTwo(addressCtrl: addressCtrl),
+                      _StepThree(
+                        phoneCtrl: phoneCtrl,
+                        passwordCtrl: passwordCtrl,
+                        confirmPasswordCtrl: confirmPasswordCtrl,
                       ),
                     ],
                   ),
@@ -198,43 +143,39 @@ class _SignupPageState extends State<SignupPage> {
 
                 const SizedBox(height: 12),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      child: Text('У вас уже есть аккаунт?',
-                        style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                      ),
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage())),
+                // Ссылка "Уже есть аккаунт?"
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    child: Text('already_have_account'.tr(),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary)),
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()),
                     ),
-                    SizedBox()
-                  ],
+                  ),
                 ),
 
                 const SizedBox(height: 16),
 
-                // Кнопки навигации
+                // Кнопки "Назад / Далее / Подтвердить"
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (_currentPage > 0)
-                      AuthButton(
-                        onPressed: _prevPage,
-                        child: const Text("Назад"),
-                      )
+                      AuthButton(onPressed: _prevPage, child: Text("back".tr()))
                     else
-                      const SizedBox(width: 80), // пустое место
+                      const SizedBox(width: 80),
 
                     if (_currentPage < 2)
-                      AuthButton(
-                        onPressed: _nextPage,
-                        child: const Text("Далее"),
-                      )
+                      AuthButton(onPressed: _nextPage, child: Text("next".tr()))
                     else
                       AuthButton(
-                        width: 175,
+                        width: 195,
                         onPressed: _submit,
-                        child: const Text("Подтвердить номер"),
+                        child: Text("confirm_phone".tr()),
                       ),
                   ],
                 ),
@@ -247,3 +188,89 @@ class _SignupPageState extends State<SignupPage> {
   }
 }
 
+// === Шаги формы ===
+
+class _StepOne extends StatelessWidget {
+  final TextEditingController firstnameCtrl;
+  final TextEditingController lastnameCtrl;
+  final TextEditingController birthdayCtrl;
+  final Future<void> Function() pickBirthday;
+
+  const _StepOne({
+    required this.firstnameCtrl,
+    required this.lastnameCtrl,
+    required this.birthdayCtrl,
+    required this.pickBirthday,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InsetTextField(controller: firstnameCtrl, hintText: "firstname".tr()),
+        const SizedBox(height: 8),
+        InsetTextField(controller: lastnameCtrl, hintText: "lastname".tr()),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: pickBirthday,
+          child: AbsorbPointer(
+            child:
+            InsetTextField(controller: birthdayCtrl, hintText: "birthday".tr()),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StepTwo extends StatelessWidget {
+  final TextEditingController addressCtrl;
+
+  const _StepTwo({required this.addressCtrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: InsetTextField(controller: addressCtrl, hintText: "address".tr()),
+    );
+  }
+}
+
+class _StepThree extends StatelessWidget {
+  final TextEditingController phoneCtrl;
+  final TextEditingController passwordCtrl;
+  final TextEditingController confirmPasswordCtrl;
+
+  const _StepThree({
+    required this.phoneCtrl,
+    required this.passwordCtrl,
+    required this.confirmPasswordCtrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InsetTextField(
+          controller: phoneCtrl,
+          hintText: "phone".tr(),
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 8),
+        InsetTextField(
+          controller: passwordCtrl,
+          hintText: "password".tr(),
+          obscureText: true,
+        ),
+        const SizedBox(height: 8),
+        InsetTextField(
+          controller: confirmPasswordCtrl,
+          hintText: "confirm_password".tr(),
+          obscureText: true,
+        ),
+      ],
+    );
+  }
+}

@@ -1,8 +1,11 @@
 import 'package:appetite_app/features/auth/view/pages/signup_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../core/theme/app_icons.dart';
-import '../../view/widgets/auth_button.dart';
+import '../widgets/widgets.dart';
+
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -13,25 +16,25 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final logoAppetite = AppIcons.logoAppetite;
 
-  final TextEditingController phoneCtrl = TextEditingController();
-  final TextEditingController passwordCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
+  final passwordCtrl = TextEditingController();
 
   void _login() {
-    debugPrint("Телефон: ${phoneCtrl.text}");
-    debugPrint("Пароль: ${passwordCtrl.text}");
-    // Здесь логика авторизации
-  }
-
-  @override
-  void dispose() {
-    phoneCtrl.dispose();
-    passwordCtrl.dispose();
-    super.dispose();
+    // TODO: API login
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const SizedBox(),
+            ChangeLanguageRow(),
+          ],
+        ),
+      ),
       body: Center(
         child: DefaultContainer(
           child: ConstrainedBox(
@@ -41,52 +44,46 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 Image(image: logoAppetite, height: 50),
                 const SizedBox(height: 16),
-                const Text(
-                  "Вход",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+
+                Text("login".tr(),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+
+                InsetTextField(
+                  controller: phoneCtrl,
+                  hintText: "phone".tr(),
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 8),
+                InsetTextField(
+                  controller: passwordCtrl,
+                  hintText: "password".tr(),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    child: Text(
+                      "register".tr(),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary),
+                    ),
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignupPage()),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                InsetTextField(
-                  controller: phoneCtrl,
-                  hintText: "Телефон",
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 12),
-                InsetTextField(
-                  controller: passwordCtrl,
-                  hintText: "Пароль",
-                  obscureText: true,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignupPage(),
-                        ),
-                      ),
-                      child: Text(
-                        'Зарегистрироваться',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(),
-                  ],
-                ),
-                const SizedBox(height: 20),
+
                 AuthButton(
                   onPressed: _login,
-                  child: const Text("Войти"),
+                  child: Text("login".tr()),
                 ),
+
               ],
             ),
           ),

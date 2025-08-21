@@ -1,4 +1,5 @@
 import 'package:appetite_app/core/theme/app_theme.dart';
+import 'package:appetite_app/features/main/view/pages_screens/main_page.dart';
 import 'package:flutter/material.dart';
 import 'features/auth/view/pages/signup_page.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
       theme: AppTheme.darkTheme,
-      home: const SignupPage(),
+      home: const MainPage(),
     );
   }
 }
