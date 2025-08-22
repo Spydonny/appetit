@@ -16,7 +16,7 @@ class InsetDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFF2C2C2C);
+    const backgroundColor = Color(0xFFF5F5F5); // светлый фон
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -24,17 +24,17 @@ class InsetDropdown<T> extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: const [
-          // Светлая тень сверху-слева
+          // светлая подсветка сверху-слева
           BoxShadow(
             offset: Offset(-3, -3),
             blurRadius: 6,
-            color: Color(0xFF3A3A3A),
+            color: Colors.white,
           ),
-          // Тёмная тень снизу-справа
+          // мягкая серая тень снизу-справа
           BoxShadow(
             offset: Offset(3, 3),
             blurRadius: 6,
-            color: Color(0xFF1A1A1A),
+            color: Color(0xFFBDBDBD),
           ),
         ],
       ),
@@ -48,7 +48,10 @@ class InsetDropdown<T> extends StatelessWidget {
           dropdownColor: backgroundColor,
           icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
           isExpanded: true,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: const TextStyle(
+            color: Colors.black87,
+            fontSize: 16,
+          ),
           items: items,
           onChanged: onChanged,
         ),
@@ -56,3 +59,4 @@ class InsetDropdown<T> extends StatelessWidget {
     );
   }
 }
+

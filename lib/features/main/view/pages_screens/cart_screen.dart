@@ -396,6 +396,8 @@ class DeliveryChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return GestureDetector(
       onTap: onSelected,
       child: AnimatedContainer(
@@ -408,10 +410,9 @@ class DeliveryChoiceChip extends StatelessWidget {
         child: Center(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: selected ? FontWeight.w500 : FontWeight.w300,
+            style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: (selected ? FontWeight.w500 : FontWeight.w300),
+              color: (selected ? Colors.white : Colors.black)
             ),
           ),
         )

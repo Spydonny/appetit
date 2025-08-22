@@ -3,7 +3,7 @@ import 'calligraphy.dart';
 
 class AppTheme {
   static ThemeData darkTheme = ThemeData.from(
-    colorScheme: const ColorScheme.dark(
+    colorScheme: const ColorScheme.light(
       primary: Colors.red,
       secondary: Colors.redAccent,
     ),

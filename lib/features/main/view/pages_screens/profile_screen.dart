@@ -17,7 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _addressController;
   late TextEditingController _birthDateController;
 
-  bool isKazakh = false;
+  final ValueNotifier<bool> isKazakh = ValueNotifier<bool>(false);
 
   // Заглушка для истории заказов
   final List<Map<String, dynamic>> orders = [
@@ -110,13 +110,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Expanded(
                 child: InsetSwitch(
-                  label: '${tr("change_language")}  ${isKazakh ? '🇰🇿' : '🇷🇺'}',
-                  value: isKazakh,
+                  label: '${tr("change_language")}  ${isKazakh.value ? '🇰🇿' : '🇷🇺'}',
+                  value: isKazakh.value,
                   onChanged: (value) {
                     setState(() {
-                      isKazakh = value;
+                      isKazakh.value = value;
                     });
-                    context.setLocale(Locale(isKazakh ? 'kk' : 'ru'));
+                    context.setLocale(Locale(isKazakh.value ? 'kk' : 'ru'));
                   },
                 ),
               ),

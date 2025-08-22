@@ -23,32 +23,6 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.red),
-              child: Text(
-                tr("menu"),
-                style: const TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: Text(tr("home")), // 🔑
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: Text(tr("settings")), // 🔑
-              onTap: () {},
-            ),
-          ],
-        ),
-      ),
-
       appBar: AppBar(
         title: const Text('Appetit'),
       ),

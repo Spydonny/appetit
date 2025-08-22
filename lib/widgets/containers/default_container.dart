@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class DefaultContainer extends StatelessWidget {
-  const DefaultContainer({super.key, this.width, this.height, this.color = Colors.white10,
+  const DefaultContainer({super.key, this.width, this.height, this.color = Colors.white12,
     this.padding = const EdgeInsets.all(32), this.margin = const EdgeInsets.all(8), required this.child,
   });
   final Widget child;
@@ -18,7 +18,8 @@ class DefaultContainer extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.all(Radius.circular(30))
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.all(Radius.circular(30)),
       ),
       padding: padding,
       margin: margin,

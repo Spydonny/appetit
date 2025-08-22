@@ -94,9 +94,10 @@ class _MenuScreenState extends State<MenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       children: [
-        // 🔹 Блок акций (stories)
         SizedBox(
           height: 110,
           child: ListView.separated(
@@ -125,7 +126,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     const SizedBox(height: 6),
                     Text(
                       tr(promo["title"]!), // ✅ локализация
-                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                      style: theme.textTheme.bodySmall,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -144,8 +145,8 @@ class _MenuScreenState extends State<MenuScreen> {
               return ElevatedButton(
                 onPressed: () => _scrollToCategory(cat),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white12,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.black12,
+                  foregroundColor: Colors.black,
                   minimumSize: const Size(48, 48),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   shape: RoundedRectangleBorder(

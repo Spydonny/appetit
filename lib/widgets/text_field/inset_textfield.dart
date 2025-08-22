@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
+
 class InsetTextField extends StatefulWidget {
   final String? hintText;
   final TextEditingController? controller;
@@ -8,7 +10,7 @@ class InsetTextField extends StatefulWidget {
   final bool? enabled;
   final int? minLines;
   final int? maxLines;
-  final ValueChanged<String>? onSubmitted; // ✅ новый колбэк
+  final ValueChanged<String>? onSubmitted;
 
   const InsetTextField({
     super.key,
@@ -37,7 +39,7 @@ class _InsetTextFieldState extends State<InsetTextField> {
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFF2C2C2C);
+    const backgroundColor = Color(0xFFF5F5F5); // светлый фон
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -48,12 +50,12 @@ class _InsetTextFieldState extends State<InsetTextField> {
           BoxShadow(
             offset: Offset(-3, -3),
             blurRadius: 6,
-            color: Color(0xFF3A3A3A),
+            color: Colors.white, // светлый верхний блик
           ),
           BoxShadow(
             offset: Offset(3, 3),
             blurRadius: 6,
-            color: Color(0xFF1A1A1A),
+            color: Color(0xFFBDBDBD), // мягкая серая тень
           ),
         ],
       ),
@@ -64,17 +66,17 @@ class _InsetTextFieldState extends State<InsetTextField> {
         minLines: widget.obscureText ? 1 : widget.minLines,
         maxLines: widget.obscureText ? 1 : widget.maxLines,
         keyboardType: (widget.maxLines == null || (widget.maxLines ?? 1) > 1)
-            ? TextInputType.multiline   // ✅ многострочный
-            : widget.keyboardType,      // ✅ дефолтный
+            ? TextInputType.multiline
+            : widget.keyboardType,
         textInputAction: (widget.maxLines == null || (widget.maxLines ?? 1) > 1)
-            ? TextInputAction.newline   // ✅ Enter = перенос строки
-            : TextInputAction.done,     // ✅ Enter = submit
+            ? TextInputAction.newline
+            : TextInputAction.done,
         onSubmitted: (value) {
           if ((widget.maxLines ?? 1) == 1 && widget.onSubmitted != null) {
             widget.onSubmitted!(value);
           }
         },
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.black87),
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: widget.hintText,
@@ -83,7 +85,7 @@ class _InsetTextFieldState extends State<InsetTextField> {
               ? IconButton(
             icon: Icon(
               _obscure ? Icons.visibility_off : Icons.visibility,
-              color: Colors.grey[400],
+              color: Colors.grey[600],
             ),
             onPressed: () {
               setState(() {
@@ -93,8 +95,7 @@ class _InsetTextFieldState extends State<InsetTextField> {
           )
               : null,
         ),
-      )
-      ,
+      ),
     );
   }
 }
