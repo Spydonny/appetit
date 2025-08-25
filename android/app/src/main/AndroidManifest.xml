@@ -3,6 +3,8 @@
         android:label="appetite_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.android.geo.AIzaSyAk9FfMoEwa9wZF_-eSjxe65bJn5wqaK64"
+            android:value="AIzaSyAk9FfMoEwa9wZF_-eSjxe65bJn5wqaK64"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

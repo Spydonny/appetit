@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
 
-import 'package:flutter/material.dart';
-import '../../../../widgets/widgets.dart';
-
 class DishContainer extends StatefulWidget {
   const DishContainer({
     super.key,
@@ -19,8 +16,10 @@ class DishContainer extends StatefulWidget {
   final String name;
   final double price;
   final String description;
-  final List<Map<String, double>> additions;
-  final List<Map<String, double>> reductions;
+
+  /// additions и reductions теперь одинаковые
+  final List<Map<String, dynamic>> additions;
+  final List<Map<String, dynamic>> reductions;
 
   @override
   State<DishContainer> createState() => _DishContainerState();
@@ -30,15 +29,26 @@ class _DishContainerState extends State<DishContainer> {
   int quantity = 1;
   final Set<String> selectedAdditions = {};
   final Set<String> selectedReductions = {};
+  final Map<String, int> additionsCount = {}; // хранит количество для countable
 
   double get totalPrice {
-    final additionsPrice = widget.additions
-        .where((map) => selectedAdditions.contains(map.keys.first))
-        .fold<double>(0, (sum, map) => sum + map.values.first);
+    final additionsPrice = widget.additions.fold<double>(0, (sum, item) {
+      final String title = item['name'] as String;
+      final double price = item['price'] as double;
+      final bool countable = item['countable'] ?? false;
 
-    final reductionsPrice = widget.reductions
-        .where((map) => selectedReductions.contains(map.keys.first))
-        .fold<double>(0, (sum, map) => sum + map.values.first);
+      if (countable) {
+        return sum + (additionsCount[title] ?? 0) * price;
+      } else {
+        return selectedAdditions.contains(title) ? sum + price : sum;
+      }
+    });
+
+    final reductionsPrice = widget.reductions.fold<double>(0, (sum, item) {
+      final String title = item['name'] as String;
+      final double price = item['price'] as double;
+      return selectedReductions.contains(title) ? sum + price : sum;
+    });
 
     return widget.price * quantity + additionsPrice - reductionsPrice;
   }
@@ -46,71 +56,68 @@ class _DishContainerState extends State<DishContainer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery
-        .sizeOf(context)
-        .width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
     return DefaultContainer(
       child: Column(
-        children: [SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image(image: widget.image),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 32),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(widget.name, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
-                    Text('От ${widget.price}₸',style: theme.textTheme.headlineSmall),
-                  ],
-                )
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Text(widget.description, style: theme.textTheme.titleSmall),
-              ),
-              _buildGrid(
-                theme,
-                'Добавить вкуса',
-                12,
-                widget.additions,
-                selectedAdditions,
-                    (title) =>
-                    setState(() {
-                      if (selectedAdditions.contains(title)) {
-                        selectedAdditions.remove(title);
-                      } else {
-                        selectedAdditions.add(title);
-                      }
-                    }),
-              ),
-              _buildGrid(
-                theme,
-                'Убрать лишнее',
-                6,
-                widget.reductions,
-                selectedReductions,
-                    (title) =>
-                    setState(() {
-                      if (selectedReductions.contains(title)) {
-                        selectedReductions.remove(title);
-                      } else {
-                        selectedReductions.add(title);
-                      }
-                    }),
-              ),
-            ],
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image(image: widget.image),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 32),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(widget.name,
+                          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
+                      Text('От ${widget.price}₸', style: theme.textTheme.headlineSmall),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(widget.description, style: theme.textTheme.titleSmall),
+                ),
+                _buildGrid(
+                  theme,
+                  'Добавить вкуса',
+                  12,
+                  widget.additions,
+                  selectedAdditions,
+                      (title) => setState(() {
+                    if (selectedAdditions.contains(title)) {
+                      selectedAdditions.remove(title);
+                    } else {
+                      selectedAdditions.add(title);
+                    }
+                  }),
+                ),
+                _buildGrid(
+                  theme,
+                  'Убрать лишнее',
+                  6,
+                  widget.reductions,
+                  selectedReductions,
+                      (title) => setState(() {
+                    if (selectedReductions.contains(title)) {
+                      selectedReductions.remove(title);
+                    } else {
+                      selectedReductions.add(title);
+                    }
+                  }),
+                ),
+              ],
+            ),
           ),
-        ),
           SizedBox(
             width: screenWidth,
             child: _QuantityRow(
               quantity: quantity,
-              onQuantityChanged: (newQuantity) =>
-                  setState(() => quantity = newQuantity),
+              onQuantityChanged: (newQuantity) => setState(() => quantity = newQuantity),
               total: totalPrice,
             ),
           ),
@@ -123,7 +130,7 @@ class _DishContainerState extends State<DishContainer> {
       ThemeData theme,
       String header,
       int max,
-      List<Map<String, double>> arr,
+      List<Map<String, dynamic>> arr,
       Set<String> selectedSet,
       void Function(String title) onTap,
       ) {
@@ -133,50 +140,81 @@ class _DishContainerState extends State<DishContainer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(header, style: theme.textTheme.titleLarge),
-          const SizedBox(height: 4),
-          Text("Максимум: $max", style: theme.textTheme.titleSmall),
           const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: arr.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,       // по 2 в ряд
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 3,     // ширина : высота
+              crossAxisCount: 2, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 1,
             ),
             itemBuilder: (context, index) {
-              final String title = arr[index].keys.first;
-              final double price = arr[index].values.first;
-              final bool isSelected = selectedSet.contains(title);
+              final item = arr[index];
+              final String title = item['name'] as String;
+              final double price = item['price'] as double;
+              final bool countable = item['countable'] ?? false;
 
-              return GestureDetector(
-                onTap: () => onTap(title),
-                child: DefaultContainer(
-                  // убираем height
-                  color: isSelected
-                      ? theme.colorScheme.primary.withAlpha(50)
-                      : Colors.white38,
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(title, style: theme.textTheme.bodyMedium),
-                        const SizedBox(height: 6),
-                        Text("+$price ₸", style: theme.textTheme.bodyLarge),
-                      ],
+              if (countable) {
+                final int count = additionsCount[title] ?? 0;
+                return DefaultContainer(
+                  padding: EdgeInsets.all(4),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(title, style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 4),
+                      Text("+$price ₸", style: theme.textTheme.bodyLarge),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () {
+                              setState(() {
+                                if (count > 0) additionsCount[title] = count - 1;
+                              });
+                            },
+                          ),
+                          Text('$count', style: theme.textTheme.bodyLarge),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: () {
+                              setState(() {
+                                additionsCount[title] = count + 1;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                final bool isSelected = selectedSet.contains(title);
+                return GestureDetector(
+                  onTap: () => onTap(title),
+                  child: DefaultContainer(
+                    color: isSelected ? theme.colorScheme.primary.withAlpha(50) : Colors.white38,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(title, style: theme.textTheme.bodyMedium),
+                          const SizedBox(height: 6),
+                          Text("+$price ₸", style: theme.textTheme.bodyLarge),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
+                );
+              }
             },
           ),
         ],
       ),
     );
   }
-
 }
 
 class _QuantityRow extends StatelessWidget {

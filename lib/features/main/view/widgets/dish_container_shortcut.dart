@@ -39,12 +39,12 @@ class _DishContainerShortcutState extends State<DishContainerShortcut> {
                   SizedBox(height: 12),
                   Text(
                     widget.description,
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
                   ),
                   SizedBox(height: 16),
                   Text(
                     'От ${widget.price}',
-                    style: theme.textTheme.titleMedium,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
                   ),
                 ],
               ),

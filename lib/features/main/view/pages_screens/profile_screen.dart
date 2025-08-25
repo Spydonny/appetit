@@ -45,8 +45,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _birthDateController.dispose();
+    for (final node in _focusNodes.values) {
+      node.dispose();
+    }
     super.dispose();
   }
+
+  Future<void> _pickBirthday() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 18),
+      firstDate: DateTime(1900),
+      lastDate: now,
+    );
+    if (picked != null) {
+      _birthDateController.text = DateFormat('dd.MM.yyyy').format(picked);
+    }
+  }
+
+  final Set<TextEditingController> _editableControllers = {};
+
+  final Map<TextEditingController, FocusNode> _focusNodes = {};
+
+  FocusNode _focusOf(TextEditingController c) =>
+      _focusNodes.putIfAbsent(c, () => FocusNode());
+
+  Widget _buildGestureEditableField({
+    required TextEditingController controller,
+    required String hintText,
+    VoidCallback? onBoubleTap, // как просили, именно так назвать
+  }) {
+    final focusNode = _focusOf(controller);
+    final enabled = _editableControllers.contains(controller);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onDoubleTap: () {
+        if (onBoubleTap != null) {
+          onBoubleTap();
+          return;
+        }
+        if (!enabled) {
+          setState(() {
+            _editableControllers.add(controller);
+          });
+          // после включения — сфокусировать и поставить курсор в конец
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            focusNode.requestFocus();
+            controller.selection = TextSelection.fromPosition(
+              TextPosition(offset: controller.text.length),
+            );
+          });
+        }
+      },
+      child: Focus(
+        focusNode: focusNode,
+        onFocusChange: (hasFocus) {
+          if (!hasFocus && _editableControllers.contains(controller)) {
+            setState(() {
+              _editableControllers.remove(controller);
+            });
+          }
+        },
+        child: InsetTextField(
+          controller: controller,
+          enabled: enabled,
+          hintText: hintText,
+          maxLines: 1,
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -70,35 +141,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 24),
 
           // Disabled поля
-          InsetTextField(
-            controller: _firstNameController,
-            enabled: false,
-            hintText: tr("first_name"), // 🔑
+          Column(
+            children: [
+              _buildGestureEditableField(
+                controller: _firstNameController,
+                hintText: tr("first_name"),
+              ),
+              const SizedBox(height: 16),
+
+              _buildGestureEditableField(
+                controller: _lastNameController,
+                hintText: tr("last_name"),
+              ),
+              const SizedBox(height: 16),
+
+              _buildGestureEditableField(
+                controller: _phoneController,
+                hintText: tr("phone"),
+              ),
+              const SizedBox(height: 16),
+
+              _buildGestureEditableField(
+                controller: _addressController,
+                hintText: tr("address"),
+                onBoubleTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (context) =>
+                        Scaffold(appBar: AppBar(),
+                          body: DefaultContainer(
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+                              child: DefaultMap(
+                                addressController: _addressController,
+                                selectable: true,
+                              )
+                          ),
+                        )
+                    )
+                )
+              ),
+              const SizedBox(height: 16),
+
+              _buildGestureEditableField(
+                controller: _birthDateController,
+                hintText: tr("birth_date"),
+                onBoubleTap: _pickBirthday
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          InsetTextField(
-            controller: _lastNameController,
-            enabled: false,
-            hintText: tr("last_name"), // 🔑
-          ),
-          const SizedBox(height: 16),
-          InsetTextField(
-            controller: _phoneController,
-            enabled: false,
-            hintText: tr("phone"), // 🔑
-          ),
-          const SizedBox(height: 16),
-          InsetTextField(
-            controller: _addressController,
-            enabled: false,
-            hintText: tr("address"), // 🔑
-          ),
-          const SizedBox(height: 16),
-          InsetTextField(
-            controller: _birthDateController,
-            enabled: false,
-            hintText: tr("birth_date"), // 🔑
-          ),
+
 
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
@@ -109,16 +198,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             children: [
               Expanded(
-                child: InsetSwitch(
-                  label: '${tr("change_language")}  ${isKazakh.value ? '🇰🇿' : '🇷🇺'}',
-                  value: isKazakh.value,
-                  onChanged: (value) {
-                    setState(() {
-                      isKazakh.value = value;
-                    });
-                    context.setLocale(Locale(isKazakh.value ? 'kk' : 'ru'));
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: isKazakh,
+                  builder: (context, value, _) {
+                    return InsetSwitch(
+                      label: '${tr("change_language")}  ${value ? '🇰🇿' : '🇷🇺'}',
+                      value: value,
+                      onChanged: (newValue) {
+                        isKazakh.value = newValue;
+                        context.setLocale(Locale(newValue ? 'kk' : 'ru'));
+                      },
+                    );
                   },
-                ),
+                )
               ),
             ],
           ),

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:appetite_app/features/auth/view/pages/pages.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../widgets/widgets.dart';
@@ -13,6 +16,9 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final Completer<GoogleMapController> _controller =
+  Completer<GoogleMapController>();
+
   final logoAppetite = AppIcons.logoAppetite;
 
   final _pageController = PageController();
@@ -231,8 +237,36 @@ class _StepTwo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: InsetTextField(controller: addressCtrl, hintText: "address".tr()),
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InsetTextField(controller: addressCtrl, hintText: "address".tr()),
+        Expanded(
+            child: Padding(padding: EdgeInsets.all(8),
+              child: GestureDetector(
+                onDoubleTap: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) =>
+                          Scaffold(appBar: AppBar(),
+                            body: DefaultContainer(
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 20),
+                                child: DefaultMap(
+                                  addressController: addressCtrl,
+                                  selectable: true,
+                                )
+                            ),
+                          )
+                      )
+                  );
+                },
+                child: DefaultMap(
+                  addressController: addressCtrl,
+                ),
+              ),
+            )
+        )
+      ],
     );
   }
 }

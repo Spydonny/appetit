@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter/material.dart';
-
 class InsetTextField extends StatefulWidget {
   final String? hintText;
   final TextEditingController? controller;

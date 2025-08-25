@@ -24,7 +24,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Appetit'),
+        title: const Center(child: Text('Appetit'),),
       ),
 
       body: screens[currentPageIndex],

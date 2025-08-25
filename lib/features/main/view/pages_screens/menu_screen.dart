@@ -168,22 +168,22 @@ class _MenuScreenState extends State<MenuScreen> {
               _buildSection(
                 keyAnchor: _sectionKeys['dishes']!,
                 title: tr('dishes'),
-                items: List.generate(5, (i) => 'Burger $i'),
+                items: List.generate(5, (i) => 'Шаурма $i'),
               ),
               _buildSection(
                 keyAnchor: _sectionKeys['snacks']!,
                 title: tr('snacks'),
-                items: List.generate(3, (i) => 'Fries $i'),
+                items: List.generate(3, (i) => 'Фри $i'),
               ),
               _buildSection(
                 keyAnchor: _sectionKeys['sauces']!,
                 title: tr('sauces'),
-                items: List.generate(2, (i) => 'Sauce $i'),
+                items: List.generate(2, (i) => 'Соусы $i'),
               ),
               _buildSection(
                 keyAnchor: _sectionKeys['drinks']!,
                 title: tr('drinks'),
-                items: List.generate(4, (i) => 'Cola $i'),
+                items: List.generate(4, (i) => 'Напитки $i'),
               ),
             ],
           ),
@@ -211,7 +211,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 name: name,
                 price: 1200,
                 assetImage: AppIcons.logoAppetite,
-                description: '${tr("description")} $name',
+                description: 'Описание $name',
                 onTap: () {
                   showModalBottomSheet(
                     context: context,
@@ -224,15 +224,15 @@ class _MenuScreenState extends State<MenuScreen> {
                             image: AppIcons.logoAppetite,
                             name: name,
                             price: 1200,
-                            description: '${tr("full_description")} $name',
-                            additions: [
-                              {tr("cheese"): 200},
-                              {tr("bacon"): 300},
-                            ],
+                            description: 'Описание - $name',
+                            additions:  [
+                            {'name': 'Сыр', 'price': 500.0, 'countable': false},
+                            {'name': 'Бекон', 'price': 300.0, 'countable': true},
+                          ],
                             reductions: [
-                              {tr("no_onion"): 0},
-                              {tr("no_sauce"): 0},
-                            ],
+                              {"name": "Без лука", "price": 0.0},
+                              {"name": "Без мяса", "price": 0.0},
+                            ]
                           ),
                         ),
                       );
