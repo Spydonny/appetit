@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 
 class DefaultMap extends StatefulWidget {
   const DefaultMap({
@@ -29,6 +32,8 @@ class _DefaultMapState extends State<DefaultMap> {
   late final TextEditingController _addressController;
   bool _isExternalController = false;
 
+  final String _googleApiKey = "⚠️ ВСТАВЬ_СВОЙ_API_KEY";
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +43,8 @@ class _DefaultMapState extends State<DefaultMap> {
     } else {
       _addressController = TextEditingController();
     }
+
+    _checkPermissionAndInit();
   }
 
   @override
@@ -48,48 +55,123 @@ class _DefaultMapState extends State<DefaultMap> {
     super.dispose();
   }
 
-  Future<void> _getAddressFromLatLng(LatLng pos) async {
-    try {
-      final placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
-      if (placemarks.isNotEmpty) {
-        final p = placemarks.first;
-        final address =
-        "${p.street ?? ''}, ${p.locality ?? ''}, ${p.administrativeArea ?? ''}, ${p.country ?? ''}"
-            .replaceAll(RegExp(r'(, )+'), ', ') // убираем лишние запятые
-            .trim()
-            .replaceAll(RegExp(r'^,|,$'), '');   // убираем ведущие/конечные запятые
+  /// 🔹 Проверяем и запрашиваем доступ к геолокации
+  Future<void> _checkPermissionAndInit() async {
+    LocationPermission permission = await Geolocator.checkPermission();
 
-        setState(() {
-          _addressController.text = address.isNotEmpty ? address : "Адрес не найден";
-        });
-      } else {
-        setState(() => _addressController.text = "Адрес не найден");
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr("map.permission_denied_forever"))),
+        );
       }
-    } catch (e) {
-      debugPrint("Ошибка геокодинга: $e");
-      setState(() => _addressController.text = "Адрес не найден");
+      return;
+    }
+
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
+      // 👉 можно сразу показать юзера при старте
+      await _goToUserLocation();
     }
   }
 
-  /// Получаем координаты из введённого адреса
+  /// 🔹 Получаем локализованный адрес по координатам
+  Future<void> _getAddressFromLatLng(LatLng pos) async {
+    try {
+      final lang = context.locale.languageCode;
+      final url = Uri.parse(
+        "https://maps.googleapis.com/maps/api/geocode/json"
+            "?latlng=${pos.latitude},${pos.longitude}"
+            "&language=$lang"
+            "&key=$_googleApiKey",
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data["status"] == "OK" && data["results"].isNotEmpty) {
+          final address = data["results"][0]["formatted_address"];
+          setState(() {
+            _addressController.text = address;
+          });
+        } else {
+          setState(() => _addressController.text = tr("map.address_not_found"));
+        }
+      } else {
+        setState(() => _addressController.text = tr("map.address_not_found"));
+      }
+    } catch (e) {
+      debugPrint("Ошибка геокодинга: $e");
+      setState(() => _addressController.text = tr("map.address_not_found"));
+    }
+  }
+
+  /// 🔹 Получаем координаты из адреса
   Future<void> _getLatLngFromAddress(String address) async {
     try {
-      List<Location> locations = await locationFromAddress(address);
-      if (locations.isNotEmpty) {
-        final loc = locations.first;
-        final pos = LatLng(loc.latitude, loc.longitude);
-        setState(() {
-          _selectedPoint = pos;
-        });
-        _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
+      final lang = context.locale.languageCode;
+      final url = Uri.parse(
+        "https://maps.googleapis.com/maps/api/geocode/json"
+            "?address=${Uri.encodeComponent(address)}"
+            "&language=$lang"
+            "&key=$_googleApiKey",
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data["status"] == "OK" && data["results"].isNotEmpty) {
+          final result = data["results"][0];
+          final location = result["geometry"]["location"];
+          final pos = LatLng(location["lat"], location["lng"]);
+          final formattedAddress = result["formatted_address"];
+
+          setState(() {
+            _selectedPoint = pos;
+            _addressController.text = formattedAddress;
+          });
+
+          _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(tr("map.address_not_found"))),
+            );
+          }
+        }
       }
     } catch (e) {
       debugPrint("Не удалось найти адрес: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Адрес не найден")),
+          SnackBar(content: Text(tr("map.address_not_found"))),
         );
       }
+    }
+  }
+
+  /// 🔹 Определяем позицию пользователя
+  Future<void> _goToUserLocation() async {
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      final latLng = LatLng(pos.latitude, pos.longitude);
+
+      setState(() => _selectedPoint = latLng);
+
+      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16));
+
+      await _getAddressFromLatLng(latLng);
+    } catch (e) {
+      debugPrint("Ошибка получения геопозиции: $e");
     }
   }
 
@@ -98,10 +180,11 @@ class _DefaultMapState extends State<DefaultMap> {
     return Stack(
       children: [
         GoogleMap(
+          mapType: MapType.normal,
           initialCameraPosition:
           widget.cameraPosition ?? DefaultMap._kUstKamenogorsk,
           myLocationEnabled: true,
-          myLocationButtonEnabled: true,
+          myLocationButtonEnabled: false, // ❌ отключаем дефолтную кнопку
           onMapCreated: (controller) => _mapController = controller,
           markers: _selectedPoint != null
               ? {
@@ -121,7 +204,7 @@ class _DefaultMapState extends State<DefaultMap> {
               : null,
         ),
 
-        // 🔹 Встроенный текстбокс для поиска
+        // 🔹 Поисковый TextField
         if (widget.selectable)
           Positioned(
             top: 16,
@@ -136,7 +219,7 @@ class _DefaultMapState extends State<DefaultMap> {
                 decoration: InputDecoration(
                   contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  hintText: "Введите адрес...",
+                  hintText: tr("map.enter_address"),
                   border: InputBorder.none,
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.search),
@@ -148,8 +231,20 @@ class _DefaultMapState extends State<DefaultMap> {
               ),
             ),
           ),
+
+        // 🔹 Кнопка перехода к геопозиции юзера
+        Positioned(
+          bottom: 20,
+          left: 20,
+          child: FloatingActionButton(
+            onPressed: _goToUserLocation,
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.my_location, color: Colors.white),
+          ),
+        ),
       ],
     );
   }
 }
+
 

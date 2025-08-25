@@ -74,6 +74,10 @@
   "birth_date": "Дата рождения",
   "date": "Дата",
   "light_theme": "Светлая тема",
-  "dark_theme": "Темная тема"
+  "dark_theme": "Темная тема",
+  "map": {
+    "enter_address": "Введите адрес...",
+    "address_not_found": "Адрес не найден"
+  }
 }
 

@@ -28,7 +28,13 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+    <string>Нам нужен доступ к вашей геопозиции для выбора адреса</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Нам нужен доступ к вашей геопозиции для выбора адреса</string>
 	<key>UISupportedInterfaceOrientations</key>
+	<key>io.flutter.embedded_views_preview</key>
+    <true/>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>

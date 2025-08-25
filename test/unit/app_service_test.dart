@@ -4,20 +4,18 @@ import 'package:appetite_app/features/shared/services/app_service.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
-// Generate mocks
-@GenerateMocks([BuildContext, TextEditingController])
+// Генерация моков только для контроллеров
+@GenerateMocks([TextEditingController])
 import 'app_service_test.mocks.dart';
 
 void main() {
   group('AppService', () {
     late AppService appService;
-    late MockBuildContext mockContext;
     late MockTextEditingController mockDateController;
     late MockTextEditingController mockAddressController;
 
     setUp(() {
       appService = AppService();
-      mockContext = MockBuildContext();
       mockDateController = MockTextEditingController();
       mockAddressController = MockTextEditingController();
     });
@@ -28,11 +26,13 @@ void main() {
       });
 
       test('should have correct signature', () {
-        expect(appService.openDatePicker, isA<Future<void> Function(BuildContext, TextEditingController)>());
+        expect(
+          appService.openDatePicker,
+          isA<Future<void> Function(BuildContext, TextEditingController)>(),
+        );
       });
 
-      // Note: Testing showDatePicker requires integration tests or widget tests
-      // as it involves UI interactions and platform-specific behavior
+      // showDatePicker требует widget/integration теста
     });
 
     group('openMap', () {
@@ -41,11 +41,17 @@ void main() {
       });
 
       test('should have correct signature', () {
-        expect(appService.openMap, isA<void Function(BuildContext, TextEditingController)>());
+        // если метод возвращает void
+        expect(
+          appService.openMap,
+          isA<void Function(BuildContext, TextEditingController)>(),
+        );
+
+        // если метод возвращает Future<void>, замени на:
+        // expect(appService.openMap, isA<Future<void> Function(BuildContext, TextEditingController)>());
       });
 
-      // Note: Testing Navigator.push requires integration tests or widget tests
-      // as it involves navigation and UI state
+      // Navigator.push тоже проверяется в widget/integration тестах
     });
 
     test('should be instantiable', () {

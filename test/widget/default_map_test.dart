@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:appetite_app/widgets/map/default_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() {
   group('DefaultMap', () {
@@ -95,11 +96,6 @@ void main() {
           ),
         ),
       );
-
-      // The default position should be Ust-Kamenogorsk
-      expect(DefaultMap._kUstKamenogorsk.target.latitude, equals(49.9483));
-      expect(DefaultMap._kUstKamenogorsk.target.longitude, equals(82.6275));
-      expect(DefaultMap._kUstKamenogorsk.zoom, equals(12.4746));
     });
 
     testWidgets('should handle null address controller gracefully', (WidgetTester tester) async {

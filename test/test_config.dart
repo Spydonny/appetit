@@ -53,10 +53,10 @@ class TestConfig {
 
   /// Enters text and waits for animations
   static Future<void> enterTextAndWait(
-    WidgetTester tester,
-    Finder finder,
-    String text,
-  ) async {
+      WidgetTester tester,
+      Finder finder,
+      String text,
+      ) async {
     await tester.enterText(finder, text);
     await tester.pumpAndSettle();
   }
@@ -65,35 +65,31 @@ class TestConfig {
   static Finder findByTypeAndText<T extends Widget>(String text) {
     return find.ancestor(
       of: find.text(text),
-      matching: find.byType<T>(),
+      matching: find.byType(Type),
     );
   }
 
-  /// Creates a mock BuildContext for testing
-  static BuildContext createMockContext() {
-    return TestWidgetsFlutterBinding.ensureInitialized()
-        .defaultBinaryMessenger
-        .setMockMessageHandler('flutter/platform', (ByteData? message) async {
-      return null;
-    }) as BuildContext;
+  /// If you need BuildContext, get it from tester
+  static BuildContext getContext(WidgetTester tester, Finder finder) {
+    return tester.element(finder);
   }
 
   /// Common test data
   static const testText = 'Test Text';
   static const testHint = 'Test Hint';
   static const testError = 'Test Error';
-  
+
   /// Common colors for testing
   static const testPrimaryColor = Colors.blue;
   static const testSecondaryColor = Colors.green;
   static const testErrorColor = Colors.red;
-  
+
   /// Common sizes for testing
   static const testWidth = 100.0;
   static const testHeight = 50.0;
   static const testPadding = 16.0;
   static const testMargin = 8.0;
-  
+
   /// Common durations for testing
   static const testDuration = Duration(milliseconds: 300);
   static const testDelay = Duration(milliseconds: 100);
@@ -189,22 +185,25 @@ class _HasColor extends Matcher {
   }
 }
 
-/// Custom matcher for size
 class _HasSize extends Matcher {
-  final Size _size;
+  final Size expectedSize;
 
-  _HasSize(this._size);
+  _HasSize(this.expectedSize);
 
   @override
-  bool matches(dynamic item, Map matchState) {
-    if (item is Container) {
-      return item.width == _size.width && item.height == _size.height;
+  bool matches(item, Map matchState) {
+    if (item is Finder) {
+      final element = item.evaluate().first;
+      final renderBox = element.renderObject as RenderBox;
+      return renderBox.size == expectedSize;
+    } else if (item is RenderBox) {
+      return item.size == expectedSize;
     }
     return false;
   }
 
   @override
   Description describe(Description description) {
-    return description.add('has size $_size');
+    return description.add('виджет имеет размер $expectedSize');
   }
 }

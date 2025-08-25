@@ -113,7 +113,7 @@ void main() {
       await setupLocator();
       
       // Check that services are registered in the correct order
-      final registrations = getIt.registrations;
+      final registrations = getIt.getAll();
       
       // Note: The actual order might vary, but both services should be registered
       expect(registrations.length, greaterThanOrEqualTo(2));
