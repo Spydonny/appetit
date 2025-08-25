@@ -12,12 +12,12 @@ class ChangeLanguageRow extends StatelessWidget {
         ElevatedButton(
           onPressed: () =>
               context.setLocale(const Locale('ru')),
-          child: const Text("RU"),
+          child: const Text('🇷🇺'),
         ),
         ElevatedButton(
           onPressed: () =>
               context.setLocale(const Locale('kk')),
-          child: const Text("KZ"),
+          child: const Text('🇰🇿' ),
         ),
       ],
     );

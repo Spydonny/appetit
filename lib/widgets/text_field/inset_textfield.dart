@@ -37,23 +37,25 @@ class _InsetTextFieldState extends State<InsetTextField> {
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFFF5F5F5); // светлый фон
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            offset: Offset(-3, -3),
-            blurRadius: 6,
-            color: Colors.white, // светлый верхний блик
+            offset: const Offset(-2, -2),
+            blurRadius: 4,
+            color: scheme.brightness == Brightness.light
+                ? Colors.white
+                : Colors.black.withOpacity(0.4),
           ),
           BoxShadow(
-            offset: Offset(3, 3),
+            offset: const Offset(2, 2),
             blurRadius: 6,
-            color: Color(0xFFBDBDBD), // мягкая серая тень
+            color: Colors.black.withOpacity(0.1),
           ),
         ],
       ),
@@ -74,16 +76,13 @@ class _InsetTextFieldState extends State<InsetTextField> {
             widget.onSubmitted!(value);
           }
         },
-        style: const TextStyle(color: Colors.black87),
+        // 🎯 цвета и стили берутся из AppTheme.inputDecorationTheme
         decoration: InputDecoration(
-          border: InputBorder.none,
           hintText: widget.hintText,
-          hintStyle: const TextStyle(color: Colors.grey),
           suffixIcon: widget.obscureText
               ? IconButton(
             icon: Icon(
               _obscure ? Icons.visibility_off : Icons.visibility,
-              color: Colors.grey[600],
             ),
             onPressed: () {
               setState(() {
@@ -97,5 +96,3 @@ class _InsetTextFieldState extends State<InsetTextField> {
     );
   }
 }
-
-

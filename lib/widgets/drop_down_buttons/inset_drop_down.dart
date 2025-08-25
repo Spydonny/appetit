@@ -16,25 +16,25 @@ class InsetDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFFF5F5F5); // светлый фон
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          // светлая подсветка сверху-слева
+        boxShadow: [
           BoxShadow(
-            offset: Offset(-3, -3),
-            blurRadius: 6,
-            color: Colors.white,
+            offset: const Offset(-2, -2),
+            blurRadius: 4,
+            color: scheme.brightness == Brightness.light
+                ? Colors.white
+                : Colors.black.withOpacity(0.4),
           ),
-          // мягкая серая тень снизу-справа
           BoxShadow(
-            offset: Offset(3, 3),
+            offset: const Offset(2, 2),
             blurRadius: 6,
-            color: Color(0xFFBDBDBD),
+            color: scheme.shadow.withOpacity(0.3),
           ),
         ],
       ),
@@ -43,13 +43,13 @@ class InsetDropdown<T> extends StatelessWidget {
           value: value,
           hint: Text(
             hintText ?? "",
-            style: const TextStyle(color: Colors.grey),
+            style: TextStyle(color: scheme.onSurface.withOpacity(0.5)),
           ),
-          dropdownColor: backgroundColor,
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+          dropdownColor: scheme.surface,
+          icon: Icon(Icons.arrow_drop_down, color: scheme.onSurface.withOpacity(0.6)),
           isExpanded: true,
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: scheme.onSurface,
             fontSize: 16,
           ),
           items: items,
@@ -59,4 +59,3 @@ class InsetDropdown<T> extends StatelessWidget {
     );
   }
 }
-

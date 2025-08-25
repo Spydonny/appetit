@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:story_view/story_view.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../../core/theme/app_icons.dart';
 import '../widgets/widgets.dart';
@@ -15,41 +15,8 @@ class MenuScreen extends StatefulWidget {
 
 class _MenuScreenState extends State<MenuScreen> {
   final List<String> categories = ['dishes', 'snacks', 'sauces', 'drinks'];
-  final ScrollController _scrollController = ScrollController();
 
-  final Map<String, GlobalKey> _sectionKeys = {
-    'dishes': GlobalKey(),
-    'snacks': GlobalKey(),
-    'sauces': GlobalKey(),
-    'drinks': GlobalKey(),
-  };
-
-  void _scrollToCategory(String category) {
-    final key = _sectionKeys[category];
-    if (key == null) return;
-    if (!_scrollController.hasClients) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final ctx = key.currentContext;
-      if (ctx == null) return;
-
-      final targetObject = ctx.findRenderObject();
-      if (targetObject == null) return;
-
-      final viewport = RenderAbstractViewport.of(targetObject);
-
-      double target = viewport.getOffsetToReveal(targetObject, 0.0).offset;
-      final pos = _scrollController.position;
-      target = target.clamp(pos.minScrollExtent, pos.maxScrollExtent);
-
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutCubic,
-      );
-    });
-  }
+  final ItemScrollController _scrollController = ItemScrollController();
 
   // 🔹 Заглушка для акций
   final List<Map<String, String>> promoStories = [
@@ -92,12 +59,21 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
+  void _scrollToCategory(int index) {
+    _scrollController.scrollTo(
+      index: index,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Column(
       children: [
+        // 🔹 Промо истории
         SizedBox(
           height: 110,
           child: ListView.separated(
@@ -125,7 +101,7 @@ class _MenuScreenState extends State<MenuScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      tr(promo["title"]!), // ✅ локализация
+                      tr(promo["title"]!),
                       style: theme.textTheme.bodySmall,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -136,14 +112,15 @@ class _MenuScreenState extends State<MenuScreen> {
           ),
         ),
 
-        // 🔹 Фиксированная строка категорий
+        // 🔹 Фиксированные кнопки категорий
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: categories.map((cat) {
+            children: List.generate(categories.length, (index) {
+              final cat = categories[index];
               return ElevatedButton(
-                onPressed: () => _scrollToCategory(cat),
+                onPressed: () => _scrollToCategory(index),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black12,
                   foregroundColor: Colors.black,
@@ -154,38 +131,34 @@ class _MenuScreenState extends State<MenuScreen> {
                   ),
                   elevation: 0,
                 ),
-                child: Text(tr(cat), style: const TextStyle(fontSize: 14)),
+                child: Text(tr(cat), style: theme.textTheme.labelLarge),
               );
-            }).toList(),
+            }),
           ),
         ),
 
         // 🔹 Контент
         Expanded(
-          child: ListView(
-            controller: _scrollController,
-            children: [
-              _buildSection(
-                keyAnchor: _sectionKeys['dishes']!,
-                title: tr('dishes'),
-                items: List.generate(5, (i) => 'Шаурма $i'),
-              ),
-              _buildSection(
-                keyAnchor: _sectionKeys['snacks']!,
-                title: tr('snacks'),
-                items: List.generate(3, (i) => 'Фри $i'),
-              ),
-              _buildSection(
-                keyAnchor: _sectionKeys['sauces']!,
-                title: tr('sauces'),
-                items: List.generate(2, (i) => 'Соусы $i'),
-              ),
-              _buildSection(
-                keyAnchor: _sectionKeys['drinks']!,
-                title: tr('drinks'),
-                items: List.generate(4, (i) => 'Напитки $i'),
-              ),
-            ],
+          child: ScrollablePositionedList.builder(
+            itemScrollController: _scrollController,
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+
+              // разное кол-во элементов для примера
+              final items = switch (cat) {
+                'dishes' => List.generate(5, (i) => 'Шаурма $i'),
+                'snacks' => List.generate(3, (i) => 'Фри $i'),
+                'sauces' => List.generate(2, (i) => 'Соусы $i'),
+                'drinks' => List.generate(4, (i) => 'Напитки $i'),
+                _ => <String>[],
+              };
+
+              return _buildSection(
+                title: tr(cat),
+                items: items,
+              );
+            },
           ),
         ),
       ],
@@ -193,7 +166,6 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   Widget _buildSection({
-    required GlobalKey keyAnchor,
     required String title,
     required List<String> items,
   }) {
@@ -202,7 +174,6 @@ class _MenuScreenState extends State<MenuScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(key: keyAnchor, height: 0),
           Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Column(
@@ -225,14 +196,14 @@ class _MenuScreenState extends State<MenuScreen> {
                             name: name,
                             price: 1200,
                             description: 'Описание - $name',
-                            additions:  [
-                            {'name': 'Сыр', 'price': 500.0, 'countable': false},
-                            {'name': 'Бекон', 'price': 300.0, 'countable': true},
-                          ],
+                            additions: [
+                              {'name': 'Сыр', 'price': 500.0, 'countable': false},
+                              {'name': 'Бекон', 'price': 300.0, 'countable': true},
+                            ],
                             reductions: [
                               {"name": "Без лука", "price": 0.0},
                               {"name": "Без мяса", "price": 0.0},
-                            ]
+                            ],
                           ),
                         ),
                       );

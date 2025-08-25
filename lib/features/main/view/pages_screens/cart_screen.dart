@@ -1,8 +1,8 @@
-import 'package:appetite_app/widgets/drop_down_buttons/drop_down_buttons.dart';
-import 'package:appetite_app/widgets/switches/inset_switch.dart';
+import 'package:appetite_app/features/shared/services/app_service.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../widgets/widgets.dart';
+import '../../../../core/core.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -17,7 +17,7 @@ class _CartScreenState extends State<CartScreen> {
   bool isDelivery = false;
   String? selectedPickupAddress;
   bool useBonuses = false;
-  final TextEditingController promoController = TextEditingController();
+  final TextEditingController promoCtrl = TextEditingController();
 
   List<Map<String, dynamic>> cartItems = [
     {
@@ -41,12 +41,20 @@ class _CartScreenState extends State<CartScreen> {
   ];
 
   final List<String> pickupAddresses = [
-    "ул. Абая 10",
-    "пр. Назарбаева 50",
-    "ул. Пушкина 7",
+    "Казахстан, 70А",
+    "Сатпаева, 8А",
+    "Новаторов, 18/2",
+    "Жибек Жолы, 1к8",
+    "Самарское шоссе, 5/1",
+    "Кабанбай батыра, 148",
+    "Назарбаева, 28А",
   ];
 
-  static const deliveryAddress = "ул. Сатпаева 25";
+
+  final deliveryAddressCtrl = TextEditingController(text: "ул. Абая 25");
+
+  void _openMap (BuildContext context) =>
+      getIt<AppService>().openMap(context, deliveryAddressCtrl);
 
   void _choosePickupAddress() async {
     final result = await showDialog<String>(
@@ -99,7 +107,7 @@ class _CartScreenState extends State<CartScreen> {
                       _buildDeliverySwitch(),
                       const SizedBox(height: 8),
                       InkWell(
-                        onTap: () => !isDelivery ? _choosePickupAddress() : null,
+                        onTap: () => !isDelivery ? _choosePickupAddress() : _openMap(context),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Row(
@@ -111,7 +119,7 @@ class _CartScreenState extends State<CartScreen> {
                                   !isDelivery
                                       ? (selectedPickupAddress ??
                                       tr("choose_pickup_address"))
-                                      : deliveryAddress,
+                                      : deliveryAddressCtrl.text,
                                   style: theme.textTheme.bodyMedium,
                                 ),
                               ),
@@ -231,7 +239,7 @@ class _CartScreenState extends State<CartScreen> {
                     children: [
                       const SizedBox(height: 12),
                       InsetTextField(
-                        controller: promoController,
+                        controller: promoCtrl,
                         hintText: tr("promo"),
                       ),
                       const SizedBox(height: 12),
@@ -405,6 +413,7 @@ class DeliveryChoiceChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? Colors.black : Colors.white12,
+          border: Border.all(color: Colors.black54),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(

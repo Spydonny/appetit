@@ -13,12 +13,14 @@ class DefaultContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: color,
-        border: Border.all(color: Colors.black12),
+        color: cs.primaryContainer,
+        border: Border.all(color: cs.onPrimaryContainer),
         borderRadius: BorderRadius.all(Radius.circular(30)),
       ),
       padding: padding,

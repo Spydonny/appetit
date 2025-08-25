@@ -27,7 +27,11 @@ class _InsetSwitchState extends State<InsetSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final isDark = scheme.brightness == Brightness.dark;
+
+    final bool isOn = _value;
 
     return InkWell(
       onTap: () {
@@ -39,27 +43,43 @@ class _InsetSwitchState extends State<InsetSwitch> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
+          color: scheme.surface,
+          boxShadow: [
+            BoxShadow(
+              offset: const Offset(-2, -2),
+              blurRadius: 4,
+              color: isDark ? Colors.black45 : Colors.white,
+            ),
+            BoxShadow(
+              offset: const Offset(2, 2),
+              blurRadius: 6,
+              color: scheme.shadow.withAlpha(76),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(widget.label, style: theme.textTheme.bodyMedium),
+            Text(widget.label,
+                style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface)),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 46,
               height: 28,
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: _value ? theme.colorScheme.primary : theme.dividerColor,
+                color: isOn
+                    ? scheme.primary
+                    : (isDark ? Colors.black : Colors.black12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Align(
-                alignment: _value ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: isOn ? Alignment.centerRight : Alignment.centerLeft,
                 child: Container(
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isOn ? scheme.onPrimary : Colors.white54,
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: const [
                       BoxShadow(

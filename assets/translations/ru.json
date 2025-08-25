@@ -72,6 +72,8 @@
   "comment": "Комментарий",
   "order_details": "Детали заказа",
   "birth_date": "Дата рождения",
-  "date": "Дата"
+  "date": "Дата",
+  "light_theme": "Светлая тема",
+  "dark_theme": "Темная тема"
 }
 

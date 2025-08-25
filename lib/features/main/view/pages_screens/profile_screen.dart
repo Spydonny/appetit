@@ -1,7 +1,10 @@
-import 'package:appetite_app/widgets/switches/inset_switch.dart';
+import 'package:appetite_app/features/shared/services/app_service.dart';
+import 'package:appetite_app/features/shared/services/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+
 import '../../../../widgets/widgets.dart';
+import '../../../../core/core.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late TextEditingController _birthDateController;
 
   final ValueNotifier<bool> isKazakh = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isLight = ValueNotifier<bool>(true);
 
   // Заглушка для истории заказов
   final List<Map<String, dynamic>> orders = [
@@ -51,18 +55,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _pickBirthday() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(now.year - 18),
-      firstDate: DateTime(1900),
-      lastDate: now,
-    );
-    if (picked != null) {
-      _birthDateController.text = DateFormat('dd.MM.yyyy').format(picked);
-    }
-  }
+  Future<void> _pickBirthday() async =>
+    getIt<AppService>().openDatePicker(context, _birthDateController);
+
+  void _pickAddress() =>
+      getIt<AppService>().openMap(context, _addressController);
+
 
   final Set<TextEditingController> _editableControllers = {};
 
@@ -75,7 +73,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required TextEditingController controller,
     required String hintText,
     VoidCallback? onBoubleTap, // как просили, именно так назвать
-  }) {
+  })
+  {
     final focusNode = _focusOf(controller);
     final enabled = _editableControllers.contains(controller);
 
@@ -162,63 +161,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
 
               _buildGestureEditableField(
-                controller: _addressController,
-                hintText: tr("address"),
-                onBoubleTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (context) =>
-                        Scaffold(appBar: AppBar(),
-                          body: DefaultContainer(
-                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 20),
-                              child: DefaultMap(
-                                addressController: _addressController,
-                                selectable: true,
-                              )
-                          ),
-                        )
-                    )
-                )
+                  controller: _addressController,
+                  hintText: tr("address"),
+                  onBoubleTap: _pickAddress
               ),
               const SizedBox(height: 16),
 
               _buildGestureEditableField(
-                controller: _birthDateController,
-                hintText: tr("birth_date"),
-                onBoubleTap: _pickBirthday
+                  controller: _birthDateController,
+                  hintText: tr("birth_date"),
+                  onBoubleTap: _pickBirthday
               ),
             ],
           ),
 
 
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(),
-          ),
+          _buildDivider(),
 
           // Переключатель языка
-          Row(
-            children: [
-              Expanded(
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: isKazakh,
-                  builder: (context, value, _) {
-                    return InsetSwitch(
-                      label: '${tr("change_language")}  ${value ? '🇰🇿' : '🇷🇺'}',
-                      value: value,
-                      onChanged: (newValue) {
-                        isKazakh.value = newValue;
-                        context.setLocale(Locale(newValue ? 'kk' : 'ru'));
-                      },
-                    );
-                  },
-                )
+          _LocalSwitch(
+            notifier: isKazakh,
+            label: '${tr("change_language")}  ${isKazakh.value ? '🇰🇿' : '🇷🇺'}',
+            onChanged: (newValue) {
+              isKazakh.value = newValue;
+              context.setLocale(Locale(newValue ? 'kk' : 'ru'));
+            },
+          ),
+          SizedBox(height: 16),
+          _LocalSwitch(
+              notifier: isLight,
+              label: isLight.value ? tr("light_theme") : tr("dark_theme"),
+              onChanged: (newValue) {
+                getIt<ThemeService>().setTheme(newValue ? ThemeMode.light : ThemeMode.dark);
+              }
               ),
-            ],
-          ),
 
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(),
-          ),
+          _buildDivider(),
 
           // История заказов
           Text(
@@ -247,6 +225,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Padding _buildDivider() {
+    return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Divider(),
+        );
+  }
+}
+
+class _LocalSwitch extends StatelessWidget {
+  const _LocalSwitch({
+    required this.notifier,
+    required this.label,
+    required this.onChanged,
+  });
+
+  final ValueNotifier<bool> notifier;
+  final String label;
+  final Function(bool) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: notifier,
+            builder: (context, value, _) {
+              return InsetSwitch(
+                label: label, // ✅ используем переданный label
+                value: value,
+                onChanged: (newValue) {
+                  notifier.value = newValue;
+                  onChanged(newValue); // ✅ вызываем переданный callback
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
