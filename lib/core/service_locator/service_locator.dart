@@ -10,7 +10,7 @@ import '../../features/shared/shared.dart';
 
 final getIt = GetIt.instance;
 
-const baseUrl = 'http://127.0.0.1:8000/api/v1';
+const baseUrl = 'https://appetitapi-production.up.railway.app/api/v1';
 
 class TokenNotifier extends ValueNotifier<String> {
   TokenNotifier([super.initialToken = '']);
