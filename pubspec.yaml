@@ -48,10 +48,29 @@ dependencies:
   firebase_core: ^4.0.0
   http: ^1.5.0
   geolocator: ^14.0.2
+  firebase_analytics: ^12.0.0
+  equatable: ^2.0.7
+  shared_preferences: ^2.5.3
+  hydrated_bloc: ^10.1.1
+  flutter_bloc: ^9.1.1
+  cached_network_image: ^3.4.1
+  path_provider: ^2.1.5
+  firebase_messaging: ^16.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_native_splash: ^2.4.6
+
+
+flutter_native_splash:
+  color: "#ff0000"           # Цвет фона
+  image: assets/logo_appetit_round.png   # Лого
+  android: true              # Включить для Android
+  ios: true                  # Включить для iOS
+  android_12:                # Отдельный блок для Android 12+
+    image: assets/logo_appetit_round.png
+    icon_background_color: "#ff0000"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

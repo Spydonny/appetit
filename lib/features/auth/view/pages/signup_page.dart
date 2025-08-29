@@ -4,7 +4,6 @@ import 'package:appetite_app/features/auth/view/pages/pages.dart';
 import 'package:appetite_app/features/shared/services/app_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../core/core.dart';
 import '../widgets/widgets.dart';
@@ -31,6 +30,20 @@ class _SignupPageState extends State<SignupPage> {
   final confirmPasswordCtrl = TextEditingController();
 
   void _nextPage() {
+    // проверка в зависимости от шага
+    if (_currentPage == 0) {
+      if (firstnameCtrl.text.trim().isEmpty ||
+          lastnameCtrl.text.trim().isEmpty ||
+          birthdayCtrl.text.trim().isEmpty) {
+        _showError("Заполните все поля");
+        return;
+      }
+    } else if (_currentPage == 1) {
+      if (addressCtrl.text.trim().isEmpty) {
+        _showError("Введите адрес");
+        return;
+      }
+    }
     if (_currentPage < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -49,28 +62,36 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void _submit() {
-    if (passwordCtrl.text != confirmPasswordCtrl.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("passwords_do_not_match".tr())),
-      );
+    if (phoneCtrl.text.trim().isEmpty ||
+        passwordCtrl.text.trim().isEmpty ||
+        confirmPasswordCtrl.text.trim().isEmpty) {
+      _showError("Заполните все поля");
       return;
     }
+
+    if (passwordCtrl.text != confirmPasswordCtrl.text) {
+      _showError("passwords_do_not_match".tr());
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            PhoneAccPage(
-              phone: phoneCtrl.text,
-              firstname: firstnameCtrl.text,
-              lastname: lastnameCtrl.text,
-              birthday: birthdayCtrl.text,
-              address: addressCtrl.text,
-              password: passwordCtrl.text,
-              onResend: () {
-                // TODO: resend logic
-              },
-            ),
+        builder: (context) => PhoneAccPage(
+          phone: phoneCtrl.text.trim(),
+          firstname: firstnameCtrl.text.trim(),
+          lastname: lastnameCtrl.text.trim(),
+          birthday: birthdayCtrl.text.trim(),
+          address: addressCtrl.text.trim(),
+          password: passwordCtrl.text.trim(),
+        ),
       ),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
@@ -85,7 +106,7 @@ class _SignupPageState extends State<SignupPage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(),
+            const SizedBox(),
             ChangeLanguageRow()
           ],
         ),
@@ -119,28 +140,22 @@ class _SignupPageState extends State<SignupPage> {
 
                 const SizedBox(height: 12),
 
-                // Ссылка "Уже есть аккаунт?"
                 Align(
                   alignment: Alignment.centerLeft,
                   child: GestureDetector(
                     child: Text('already_have_account'.tr(),
                         style: TextStyle(
-                            color: Theme
-                                .of(context)
-                                .colorScheme
-                                .primary)),
-                    onTap: () =>
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const LoginPage()),
-                        ),
+                            color: Theme.of(context).colorScheme.primary)),
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()),
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 16),
 
-                // Кнопки "Назад / Далее / Подтвердить"
                 _buildNavigationRow(),
               ],
             ),

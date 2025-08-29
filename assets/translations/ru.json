@@ -75,9 +75,16 @@
   "date": "Дата",
   "light_theme": "Светлая тема",
   "dark_theme": "Темная тема",
+  "cafe_closed": "Аппетит не работает",
+  "order_done": "Заказ оформлен",
   "map": {
     "enter_address": "Введите адрес...",
     "address_not_found": "Адрес не найден"
-  }
+  },
+  "no_categories": "Меню пустое",
+  "NEW": "Новый",
+  "PROCESSING": "В обработке",
+  "COMPLETED": "Завершён",
+  "CANCELLED": "Отменён"
 }
 

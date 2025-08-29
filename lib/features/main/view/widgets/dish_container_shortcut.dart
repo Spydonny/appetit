@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 import '../../../../widgets/widgets.dart';
 
 class DishContainerShortcut extends StatefulWidget {
-  const DishContainerShortcut({super.key,
-    required this.name, required this.description, required this.price, required this.assetImage, this.onTap});
-  final AssetImage assetImage;
+  const DishContainerShortcut({
+    super.key,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imageUrl,
+    this.onTap,
+  });
+
+  final String imageUrl;
   final String name;
   final String description;
   final double price;
@@ -22,13 +31,27 @@ class _DishContainerShortcutState extends State<DishContainerShortcut> {
 
     return GestureDetector(
       onTap: widget.onTap,
-      child:DefaultContainer(
+      child: DefaultContainer(
         width: screenWidth * 0.9,
         child: Row(
           children: [
-            Image(image: widget.assetImage, height: 35),
-            SizedBox(width: 16),
-            Expanded( // <-- вот здесь
+            /// Кэшированная загрузка превью
+            CachedNetworkImage(
+              imageUrl: widget.imageUrl,
+              height: 35,
+              width: 35,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => const SizedBox(
+                height: 35,
+                width: 35,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+              errorWidget: (context, url, error) =>
+              const Icon(Icons.broken_image, size: 35),
+            ),
+            const SizedBox(width: 16),
+
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -36,22 +59,28 @@ class _DishContainerShortcutState extends State<DishContainerShortcut> {
                     widget.name,
                     style: theme.textTheme.titleLarge,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
                     widget.description,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[500],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    'От ${widget.price}',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
+                    'От ${widget.price} ₸',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
-      )
+      ),
     );
   }
 }

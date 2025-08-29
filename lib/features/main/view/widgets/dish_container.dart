@@ -1,21 +1,31 @@
+import 'dart:convert';
+
+import 'package:appetite_app/core/core.dart';
+import 'package:appetite_app/features/main/logic/service/cart_service.dart';
+import 'package:appetite_app/features/shared/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
+
+import 'package:cached_network_image/cached_network_image.dart';
 
 class DishContainer extends StatefulWidget {
   const DishContainer({
     super.key,
-    required this.image,
+    required this.imageUrl,
     required this.name,
     required this.price,
     required this.description,
     required this.additions,
     required this.reductions,
+    required this.category, required this.id,
   });
 
-  final AssetImage image;
+  final String imageUrl;
+  final String category;
   final String name;
   final double price;
   final String description;
+  final int id;
 
   /// additions и reductions теперь одинаковые
   final List<Map<String, dynamic>> additions;
@@ -53,6 +63,28 @@ class _DishContainerState extends State<DishContainer> {
     return widget.price * quantity + additionsPrice - reductionsPrice;
   }
 
+  void _toCart() async {
+    try {
+      await getIt<CartService>().addToCart(
+        dishId: widget.id,
+        dishName: widget.name,
+        category: widget.category,
+        price: totalPrice,
+        quantity: quantity,
+      );
+    }catch(e) {
+      debugPrint(e.toString());
+    }
+
+    // getIt<AnalyticsService>().logAddToCart(
+    //   dishId: widget.id.toString(),
+    //   dishName: widget.name,
+    //   category: widget.category,
+    //   price: totalPrice,
+    //   quantity: quantity,
+    // );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -65,8 +97,20 @@ class _DishContainerState extends State<DishContainer> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image(image: widget.image),
+                /// --- Кэшированная загрузка картинки ---
+                CachedNetworkImage(
+                  imageUrl: widget.imageUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 180,
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(),
+                  ),
+                  errorWidget: (context, url, error) =>
+                  const Icon(Icons.broken_image, size: 80),
+                ),
                 const SizedBox(height: 16),
+
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 32),
                   child: Row(
@@ -82,6 +126,7 @@ class _DishContainerState extends State<DishContainer> {
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Text(widget.description, style: theme.textTheme.titleSmall),
                 ),
+
                 _buildGrid(
                   theme,
                   'Добавить вкуса',
@@ -96,6 +141,7 @@ class _DishContainerState extends State<DishContainer> {
                     }
                   }),
                 ),
+
                 _buildGrid(
                   theme,
                   'Убрать лишнее',
@@ -113,9 +159,11 @@ class _DishContainerState extends State<DishContainer> {
               ],
             ),
           ),
+
           SizedBox(
             width: screenWidth,
             child: _QuantityRow(
+              onToCart: _toCart,
               quantity: quantity,
               onQuantityChanged: (newQuantity) => setState(() => quantity = newQuantity),
               total: totalPrice,
@@ -157,7 +205,7 @@ class _DishContainerState extends State<DishContainer> {
               if (countable) {
                 final int count = additionsCount[title] ?? 0;
                 return DefaultContainer(
-                  padding: EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(4),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -217,17 +265,19 @@ class _DishContainerState extends State<DishContainer> {
   }
 }
 
+
 class _QuantityRow extends StatelessWidget {
   const _QuantityRow({
     super.key,
     required this.quantity,
     required this.onQuantityChanged,
-    required this.total,
+    required this.total, required this.onToCart,
   });
 
   final int quantity;
   final ValueChanged<int> onQuantityChanged;
   final double total;
+  final VoidCallback onToCart;
 
   @override
   Widget build(BuildContext context) {
@@ -262,9 +312,7 @@ class _QuantityRow extends StatelessWidget {
         Align(
           alignment: Alignment.centerRight,
           child: PillButton(
-            onPressed: () {
-              // TODO: логика добавления в корзину
-            },
+            onPressed: onToCart,
             colorPrimary: Theme
                 .of(context)
                 .colorScheme

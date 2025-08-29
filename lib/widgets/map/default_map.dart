@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+
+import '../../features/shared/services/map_service.dart';
 
 class DefaultMap extends StatefulWidget {
   const DefaultMap({
@@ -32,7 +35,7 @@ class _DefaultMapState extends State<DefaultMap> {
   late final TextEditingController _addressController;
   bool _isExternalController = false;
 
-  final String _googleApiKey = "⚠️ ВСТАВЬ_СВОЙ_API_KEY";
+  final String _googleApiKey = "AIzaSyAk9FfMoEwa9wZF_-eSjxe65bJn5wqaK64";
 
   @override
   void initState() {
@@ -83,25 +86,18 @@ class _DefaultMapState extends State<DefaultMap> {
   Future<void> _getAddressFromLatLng(LatLng pos) async {
     try {
       final lang = context.locale.languageCode;
-      final url = Uri.parse(
-        "https://maps.googleapis.com/maps/api/geocode/json"
-            "?latlng=${pos.latitude},${pos.longitude}"
-            "&language=$lang"
-            "&key=$_googleApiKey",
+      final mapService = GetIt.I<MapService>();
+
+      final response = await mapService.reverseGeocode(
+        pos.latitude,
+        pos.longitude,
       );
 
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data["status"] == "OK" && data["results"].isNotEmpty) {
-          final address = data["results"][0]["formatted_address"];
-          setState(() {
-            _addressController.text = address;
-          });
-        } else {
-          setState(() => _addressController.text = tr("map.address_not_found"));
-        }
+      if (response.results.isNotEmpty) {
+        final address = response.results[0]['formatted_address'];
+        setState(() {
+          _addressController.text = address;
+        });
       } else {
         setState(() => _addressController.text = tr("map.address_not_found"));
       }
@@ -115,35 +111,27 @@ class _DefaultMapState extends State<DefaultMap> {
   Future<void> _getLatLngFromAddress(String address) async {
     try {
       final lang = context.locale.languageCode;
-      final url = Uri.parse(
-        "https://maps.googleapis.com/maps/api/geocode/json"
-            "?address=${Uri.encodeComponent(address)}"
-            "&language=$lang"
-            "&key=$_googleApiKey",
-      );
+      final mapService = GetIt.I<MapService>();
 
-      final response = await http.get(url);
+      final response = await mapService.forwardGeocode(address);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data["status"] == "OK" && data["results"].isNotEmpty) {
-          final result = data["results"][0];
-          final location = result["geometry"]["location"];
-          final pos = LatLng(location["lat"], location["lng"]);
-          final formattedAddress = result["formatted_address"];
+      if (response.results.isNotEmpty) {
+        final result = response.results.first;
+        final location = result.geometry.location;
+        final pos = LatLng(location.lat, location.lng);
+        final formattedAddress = result.formattedAddress;
 
-          setState(() {
-            _selectedPoint = pos;
-            _addressController.text = formattedAddress;
-          });
+        setState(() {
+          _selectedPoint = pos;
+          _addressController.text = formattedAddress;
+        });
 
-          _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(tr("map.address_not_found"))),
-            );
-          }
+        _mapController?.animateCamera(CameraUpdate.newLatLng(pos));
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(tr("map.address_not_found"))),
+          );
         }
       }
     } catch (e) {
@@ -155,6 +143,7 @@ class _DefaultMapState extends State<DefaultMap> {
       }
     }
   }
+
 
   /// 🔹 Определяем позицию пользователя
   Future<void> _goToUserLocation() async {

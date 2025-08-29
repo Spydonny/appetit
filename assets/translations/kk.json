@@ -75,10 +75,17 @@
   "date": "Күні",
   "light_theme": "Ашық тақырып",
   "dark_theme": "Қара тақырып",
+  "cafe_closed": "Аппетит жұмыс істемейді",
+  "order_done": "Тапсырыс рәсімделді",
   "map": {
     "enter_address": "Мекенжайды енгізіңіз...",
     "address_not_found": "Мекенжай табылмады"
-  }
+  },
+  "no_categories": "Мәзірде ештеңе жоқ",
+  "NEW": "Жаңа",
+  "PROCESSING": "Өңделуде",
+  "COMPLETED": "Аяқталды",
+  "CANCELLED": "Бас тартылды"
 }
 
 

@@ -1,62 +1,410 @@
+import 'package:appetite_app/features/shared/services/analytics_service.dart';
 import 'package:appetite_app/features/shared/services/app_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../core/core.dart';
+import '../../logic/bloc/cart_bloc/cart_bloc.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
+  bool get isCafeClosed {
+    final nowHour = DateTime.now().hour;
+    return nowHour > 2 && nowHour < 7;
+  }
+
+  void _openMap(BuildContext context) {
+    getIt<AppService>().openMap(context, TextEditingController());
+  }
+
+  void _takeOrder(BuildContext context, CartState state) {
+    if (isCafeClosed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('cafe_closed'.tr()),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    getIt<AnalyticsService>().logPurchase(
+      orderId: '',
+      totalPrice: state.total,
+      items: state.items,
+    );
+
+    try {
+      context.read<CartBloc>().add(CartOrderSubmitted());
+    }catch(e){
+      debugPrint(e.toString());
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('order_done'.tr()),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
-  State<CartScreen> createState() => _CartScreenState();
-}
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
-class _CartScreenState extends State<CartScreen> {
-  String? payment;
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // --- Способ получения ---
+                    SectionContainer(
+                      title: tr("receiving_method"),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          _buildDeliverySwitch(context, state),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: () {
+                              if (!state.isDelivery) {
+                                _choosePickupAddress(context);
+                              } else {
+                                _openMap(context);
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.location_on_outlined),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      !state.isDelivery
+                                          ? (state.pickupAddress ??
+                                          tr("choose_pickup_address"))
+                                          : (state.deliveryAddress ??
+                                          tr("enter_delivery_address")),
+                                      style: theme.textTheme.bodyMedium,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-  bool isDelivery = false;
-  String? selectedPickupAddress;
-  bool useBonuses = false;
-  final TextEditingController promoCtrl = TextEditingController();
+                    // --- Ваш заказ ---
+                    SectionContainer(
+                      title: tr("cart"),
+                      child: Column(
+                        children: state.items.asMap().entries.map((entry) {
+                          final i = entry.key;
+                          final item = entry.value;
 
-  List<Map<String, dynamic>> cartItems = [
-    {
-      "title": "Маргарита",
-      "description": "30 см, классика",
-      "price": 2000,
-      "quantity": 1,
-    },
-    {
-      "title": "Пепперони",
-      "description": "35 см, острое",
-      "price": 2500,
-      "quantity": 1,
-    },
-    {
-      "title": "Филадельфия",
-      "description": "8 шт",
-      "price": 3000,
-      "quantity": 1,
-    },
-  ];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Название + описание
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item["title"],
+                                          style: theme.textTheme.bodyLarge
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          item["description"],
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
 
-  final List<String> pickupAddresses = [
-    "Казахстан, 70А",
-    "Сатпаева, 8А",
-    "Новаторов, 18/2",
-    "Жибек Жолы, 1к8",
-    "Самарское шоссе, 5/1",
-    "Кабанбай батыра, 148",
-    "Назарбаева, 28А",
-  ];
+                                  // Счетчик количества
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.remove_circle_outline),
+                                        onPressed: () {
+                                          if (item["quantity"] > 1) {
+                                            context.read<CartBloc>().add(
+                                              CartItemQuantityChanged(
+                                                index: i,
+                                                quantity:
+                                                (item["quantity"] - 1),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                      Text(
+                                        "${item["quantity"]}",
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.add_circle_outline),
+                                        onPressed: () {
+                                          context.read<CartBloc>().add(
+                                            CartItemQuantityChanged(
+                                              index: i,
+                                              quantity:
+                                              (item["quantity"] + 1),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
 
+                                  const SizedBox(width: 12),
 
-  final deliveryAddressCtrl = TextEditingController(text: "ул. Абая 25");
+                                  // Цена + удалить
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        "${item["price"] * item["quantity"]} ₸",
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline,
+                                            color: Colors.redAccent),
+                                        onPressed: () => context
+                                            .read<CartBloc>()
+                                            .add(CartItemRemoved(i)),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-  void _openMap (BuildContext context) =>
-      getIt<AppService>().openMap(context, deliveryAddressCtrl);
+                    // --- Скидки ---
+                    SectionContainer(
+                      title: tr("discounts"),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          InsetTextField(
+                            hintText: tr("promo"),
+                            onSubmitted: (v) => context
+                                .read<CartBloc>()
+                                .add(CartPromoApplied(v)),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: InsetSwitch(
+                                  value: state.useBonuses,
+                                  onChanged: (v) => context
+                                      .read<CartBloc>()
+                                      .add(CartUseBonusesChanged(v)),
+                                  label: tr("use_bonus"),
+                                ),
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-  void _choosePickupAddress() async {
+                    // --- Способ оплаты ---
+                    SectionContainer(
+                      title: tr("payment_method"),
+                      child: InsetDropdown<String>(
+                        hintText: tr("select_payment"),
+                        value: state.payment,
+                        items: [
+                          DropdownMenuItem(
+                            value: "Kaspi",
+                            child: Text(tr("pay_kaspi")),
+                          ),
+                          DropdownMenuItem(
+                            value: "Cash",
+                            child: Text(tr("pay_cash")),
+                          ),
+                        ],
+                        onChanged: (value) => context
+                            .read<CartBloc>()
+                            .add(CartPaymentChanged(value!)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Комментарии ---
+                    SectionContainer(
+                      title: tr("comment_order"),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: InsetTextField(
+                          hintText: tr("comment"),
+                          minLines: 1,
+                          maxLines: 3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- Детали заказа ---
+                    SectionContainer(
+                      title: tr("order_details"),
+                      child: Column(
+                        children: [
+                          _priceRow(tr("products"),
+                              "${state.productsTotal.toInt()} ₸", context),
+                          _priceRow(tr("delivery"),
+                              "${state.deliveryPrice.toInt()} ₸", context),
+                          _priceRow(
+                              state.useBonuses
+                                  ? tr("use_bonus")
+                                  : tr("bonuses"),
+                              "${state.bonusValue.toInt()} ₸",
+                              context),
+                          const Divider(),
+                          _priceRow(tr("total"), "${state.total.toInt()} ₸",
+                              context,
+                              isTotal: true),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // --- Кнопка заказа ---
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: PillButton(
+                  colorPrimary: theme.colorScheme.primary,
+                  colorOnPrimary: theme.colorScheme.onPrimary,
+                  onPressed: () => _takeOrder(context, state),
+                  child: Text(
+                    tr("order"),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _priceRow(String label, String value, BuildContext context,
+      {bool isTotal = false}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style:
+            isTotal ? theme.textTheme.titleLarge : theme.textTheme.bodyMedium,
+          ),
+          Text(
+            value,
+            style:
+            isTotal ? theme.textTheme.titleLarge : theme.textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliverySwitch(BuildContext context, CartState state) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          child: DeliveryChoiceChip(
+            label: tr("pickup"),
+            selected: !state.isDelivery,
+            onSelected: () => context
+                .read<CartBloc>()
+                .add(const CartDeliveryChanged(false)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: DeliveryChoiceChip(
+            label: tr("delivery"),
+            selected: state.isDelivery,
+            onSelected: () => context
+                .read<CartBloc>()
+                .add(const CartDeliveryChanged(true)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _choosePickupAddress(BuildContext context) async {
+    final pickupAddresses = [
+      "Казахстан, 70А",
+      "Сатпаева, 8А",
+      "Новаторов, 18/2",
+      "Жибек Жолы, 1к8",
+      "Самарское шоссе, 5/1",
+      "Кабанбай батыра, 148",
+      "Назарбаева, 28А",
+    ];
+
     final result = await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
@@ -72,320 +420,8 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
     if (result != null) {
-      setState(() => selectedPickupAddress = result);
+      context.read<CartBloc>().add(CartPickupAddressSelected(result));
     }
-  }
-
-  void _removeItem(int index) {
-    setState(() => cartItems.removeAt(index));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final productsTotal = cartItems.fold<int>(
-        0, (sum, item) => sum + (item["price"] as int) * (item["quantity"] as int));
-    final deliveryPrice = !isDelivery ? 0 : 500;
-    final bonusValue = useBonuses ? 300 : 0;
-    final total = productsTotal + deliveryPrice - bonusValue;
-
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // --- Способ получения ---
-                SectionContainer(
-                  title: tr("receiving_method"),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      _buildDeliverySwitch(),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => !isDelivery ? _choosePickupAddress() : _openMap(context),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.location_on_outlined),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  !isDelivery
-                                      ? (selectedPickupAddress ??
-                                      tr("choose_pickup_address"))
-                                      : deliveryAddressCtrl.text,
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // --- Ваш заказ ---
-                SectionContainer(
-                  title: tr("cart"),
-                  child: Column(
-                    children: cartItems.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final item = entry.value;
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Название + описание
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item["title"],
-                                      style: theme.textTheme.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item["description"],
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Счетчик количества
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline),
-                                    onPressed: () {
-                                      setState(() {
-                                        if (item["quantity"] > 1) {
-                                          item["quantity"]--;
-                                        }
-                                      });
-                                    },
-                                  ),
-                                  Text(
-                                    "${item["quantity"]}",
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.add_circle_outline),
-                                    onPressed: () {
-                                      setState(() {
-                                        item["quantity"]++;
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              // Цена + удалить
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    "${item["price"] * item["quantity"]} ₸",
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline,
-                                        color: Colors.redAccent),
-                                    onPressed: () => _removeItem(i),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // --- Скидки ---
-                SectionContainer(
-                  title: tr("discounts"),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 12),
-                      InsetTextField(
-                        controller: promoCtrl,
-                        hintText: tr("promo"),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: InsetSwitch(
-                              value: useBonuses,
-                              onChanged: (v) => setState(() => useBonuses = v),
-                              label: tr("use_bonus"),
-                            ),
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // --- Способ оплаты ---
-                SectionContainer(
-                  title: tr("payment_method"),
-                  child: InsetDropdown<String>(
-                    hintText: tr("select_payment"),
-                    value: payment,
-                    items: [
-                      DropdownMenuItem(
-                        value: "Kaspi",
-                        child: Text(tr("pay_kaspi")),
-                      ),
-                      DropdownMenuItem(
-                        value: "Cash",
-                        child: Text(tr("pay_cash")),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        payment = value;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // --- Комментарии ---
-                SectionContainer(
-                  title: tr("comment_order"),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: InsetTextField(
-                      hintText: tr("comment"),
-                      minLines: 1,
-                      maxLines: 3,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // --- Детали заказа ---
-                SectionContainer(
-                  title: tr("order_details"),
-                  child: Column(
-                    children: [
-                      _priceRow(tr("products"), "$productsTotal ₸"),
-                      _priceRow(tr("delivery"), "$deliveryPrice ₸"),
-                      _priceRow(
-                        useBonuses ? tr("use_bonus") : tr("bonuses"),
-                        "$bonusValue ₸",
-                      ),
-                      const Divider(),
-                      _priceRow(tr("total"), "$total ₸", isTotal: true),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // --- Кнопка заказа ---
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
-            width: double.infinity,
-            child: PillButton(
-              colorPrimary: theme.colorScheme.primary,
-              colorOnPrimary: theme.colorScheme.onPrimary,
-              onPressed: () {},
-              child: Text(
-                tr("order"),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _priceRow(String label, String value, {bool isTotal = false}) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: isTotal
-                ? theme.textTheme.titleLarge
-                : theme.textTheme.bodyMedium,
-          ),
-          Text(
-            value,
-            style: isTotal
-                ? theme.textTheme.titleLarge
-                : theme.textTheme.bodyMedium,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDeliverySwitch() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          child: DeliveryChoiceChip(
-            label: tr("pickup"),
-            selected: !isDelivery,
-            onSelected: () => setState(() => isDelivery = false),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: DeliveryChoiceChip(
-            label: tr("delivery"),
-            selected: isDelivery,
-            onSelected: () => setState(() => isDelivery = true),
-          ),
-        ),
-      ],
-    );
   }
 }
 

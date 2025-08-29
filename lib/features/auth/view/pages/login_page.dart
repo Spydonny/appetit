@@ -1,10 +1,13 @@
+import 'package:appetite_app/features/auth/services/auth_service.dart';
 import 'package:appetite_app/features/auth/view/pages/signup_page.dart';
+import 'package:appetite_app/features/main/view/pages_screens/main_page.dart';
+import 'package:appetite_app/features/shared/services/analytics_service.dart';
+import 'package:appetite_app/main.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../widgets/widgets.dart';
-import '../../../../core/theme/app_icons.dart';
+import '../../../../core/core.dart';
 import '../widgets/widgets.dart';
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,8 +22,29 @@ class _LoginPageState extends State<LoginPage> {
   final phoneCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
 
-  void _login() {
-    // TODO: API login
+  void _login() async {
+    final phone = phoneCtrl.text.trim();
+    final password = passwordCtrl.text.trim();
+
+    if (phone.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Введите телефон и пароль")),
+      );
+      return;
+    }
+
+    getIt<AnalyticsService>().logLogin(timestamp: DateTime.now());
+    try {
+      await getIt<AuthService>().login(emailOrPhone: phone, password: password);
+    } catch (e) {
+      debugPrint(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Ошибка входа: $e")),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MainPage()));
   }
 
   @override
@@ -83,7 +107,6 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: _login,
                   child: Text("login".tr()),
                 ),
-
               ],
             ),
           ),
